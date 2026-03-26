@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description = 'Zero-dependency asset bundler with CSS hot-reloading, fingerprinting, ' \
                      'live reload, and a flexible plugin system. Works with Rails, ' \
                      'Hanami, or any Rack app.'
-  spec.homepage = 'https://github.com/wout/bun_bun_bundle'
+  spec.homepage = 'https://codeberg.org/w0u7/bun_bun_bundle'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.1.0'
 
