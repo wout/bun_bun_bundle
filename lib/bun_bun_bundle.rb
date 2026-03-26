@@ -3,6 +3,7 @@
 require_relative 'bun_bun_bundle/version'
 require_relative 'bun_bun_bundle/config'
 require_relative 'bun_bun_bundle/manifest'
+require_relative 'bun_bun_bundle/safe_html'
 require_relative 'bun_bun_bundle/helpers'
 require_relative 'bun_bun_bundle/reload_tag'
 require_relative 'bun_bun_bundle/dev_cache_middleware'
