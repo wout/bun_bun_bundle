@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bun_bun_bundle'
+
+command = ARGV[0]
+flags = ARGV[1..]
+bun_dir = BunBunBundle.bun_path
+bake = File.join(bun_dir, 'bake.js')
+
+case command
+when 'dev', 'watch'
+  exec('bun', 'run', bake, '--dev', *flags)
+when 'build'
+  exec('bun', 'run', bake, '--prod', *flags)
+else
+  puts <<~USAGE
+    Usage: bun_bun_bundle <command> [flags]
+
+    Commands:
+      dev     Start development server with live reload and CSS hot-reloading
+      build   Build assets for production (with fingerprinting)
+
+    Flags:
+      --prod  Enable fingerprinting and minification
+      --dev   Enable source maps and watch mode
+
+    Examples:
+      bun_bun_bundle dev          # development with live reload
+      bun_bun_bundle dev --prod   # development with production build
+      bun_bun_bundle build        # production build
+
+    Configuration:
+      Place a config/bun.json in your project root to customize settings.
+      See the README for available options.
+  USAGE
+  exit(command ? 1 : 0)
+end
