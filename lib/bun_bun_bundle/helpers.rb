@@ -13,6 +13,8 @@ module BunBunBundle
   #   <%= bun_css_tag("css/app.css") %>
   #
   module Helpers
+    include SafeHtml
+
     # Returns the public path to an asset from the manifest.
     #
     # Prepends the configured public_path and asset_host:
@@ -33,7 +35,7 @@ module BunBunBundle
     def bun_js_tag(source, **options)
       src = bun_asset(source)
       attrs = { type: 'text/javascript' }.merge(options).merge(src: src)
-      %(<script #{_bun_html_attrs(attrs)}></script>)
+      _bun_safe(%(<script #{_bun_html_attrs(attrs)}></script>))
     end
 
     # Generates a <link> tag for a CSS entry point.
@@ -44,7 +46,7 @@ module BunBunBundle
     def bun_css_tag(source, **options)
       href = bun_asset(source)
       attrs = { type: 'text/css', rel: 'stylesheet' }.merge(options).merge(href: href)
-      %(<link #{_bun_html_attrs(attrs)}>)
+      _bun_safe(%(<link #{_bun_html_attrs(attrs)}>))
     end
 
     # Generates an <img> tag for an image asset.
@@ -56,7 +58,7 @@ module BunBunBundle
       src = bun_asset(source)
       alt = options.delete(:alt) || File.basename(source, '.*').tr('-_', ' ').capitalize
       attrs = { alt: alt }.merge(options).merge(src: src)
-      %(<img #{_bun_html_attrs(attrs)}>)
+      _bun_safe(%(<img #{_bun_html_attrs(attrs)}>))
     end
 
     private

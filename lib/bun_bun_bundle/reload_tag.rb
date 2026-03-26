@@ -10,6 +10,8 @@ module BunBunBundle
   # Only outputs content when BunBunBundle.development? is true.
   #
   module ReloadTag
+    include SafeHtml
+
     # Returns the live reload <script> tag, or an empty string in production.
     #
     # Example (ERB):
@@ -24,7 +26,7 @@ module BunBunBundle
         "#{config.public_path}/#{key}"
       end
 
-      <<~HTML
+      html = <<~HTML
         <script>
         (() => {
           const cssPaths = #{css_paths.to_json};
@@ -56,6 +58,7 @@ module BunBunBundle
         })()
         </script>
       HTML
+      _bun_safe(html)
     end
   end
 end
