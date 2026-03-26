@@ -36,6 +36,14 @@ module BunBunBundle
       environment == 'production'
     end
 
+    # Loads config and manifest. Call this from Hanami's config/app.rb or
+    # any Rack app's startup.
+    def setup(root: Dir.pwd)
+      self.config = Config.load(root: root.to_s)
+      options = development? ? {} : { retries: 1, delay: 0 }
+      self.manifest = Manifest.load(root: root.to_s, **options)
+    end
+
     # Returns the path to the bundled JS files shipped with the gem.
     def bun_path
       File.expand_path('bun', __dir__)

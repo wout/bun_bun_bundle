@@ -13,13 +13,7 @@ module BunBunBundle
 
     initializer 'bun_bun_bundle.manifest' do |app|
       config.after_initialize do
-        BunBunBundle.config = Config.load(root: app.root.to_s)
-
-        BunBunBundle.manifest = if BunBunBundle.development?
-                                  Manifest.load(root: app.root.to_s)
-                                else
-                                  Manifest.load(root: app.root.to_s, retries: 1, delay: 0)
-                                end
+        BunBunBundle.setup(root: app.root)
       end
     end
 

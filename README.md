@@ -87,21 +87,16 @@ stale asset caching.
    # config/app.rb
 
    require 'bun_bun_bundle/hanami'
-   ```
-
-2. Optionally add the dev cache middleware:
-
-   ```ruby
-   # config/app.rb
 
    module MyApp
      class App < Hanami::App
+       BunBunBundle.setup(root: root)
        config.middleware.use BunBunBundle::DevCacheMiddleware if Hanami.env?(:development)
      end
    end
    ```
 
-3. Include the helpers in your views:
+2. Include the helpers in your views:
 
    ```ruby
    # app/views/helpers.rb
@@ -129,9 +124,7 @@ stale asset caching.
 ```ruby
 require 'bun_bun_bundle'
 
-# Configure manually
-BunBunBundle.config = BunBunBundle::Config.load(root: __dir__)
-BunBunBundle.manifest = BunBunBundle::Manifest.load(root: __dir__)
+BunBunBundle.setup(root: __dir__)
 
 # Optionally set a CDN host
 BunBunBundle.asset_host = 'https://cdn.example.com'
