@@ -279,6 +279,8 @@ was born. I hope you enjoy it too!
 
 ## Contributing
 
+We use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'feat: new feature'`)
