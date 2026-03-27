@@ -218,13 +218,61 @@ override.
 
 ## Plugins
 
-Three plugins are included out of the box:
+Three plugins are included out of the box.
 
-| Plugin       | Description                                                      |
-| ------------ | ---------------------------------------------------------------- |
-| `cssAliases` | Resolves `$/` root aliases in CSS `url()` references             |
-| `cssGlobs`   | Expands glob patterns in `@import` statements                    |
-| `jsGlobs`    | Compiles `import x from 'glob:./path/*.js'` into object mappings |
+### `cssAliases`
+
+Resolves `$/` root aliases in CSS `url()` references to absolute paths. This
+lets you reference assets from the source root without worrying about relative
+paths:
+
+```css
+.logo {
+  background: url("$/images/logo.png");
+}
+```
+
+This will be resolved to an absolute path like
+`url('/absolute/path/to/src/images/logo.png')`.
+
+### `cssGlobs`
+
+Expands glob patterns in CSS `@import` statements. Instead of manually listing
+every file, you can import an entire directory at once:
+
+```css
+@import "./components/**/*.css";
+```
+
+This will be expanded into individual `@import` lines for each matching file,
+sorted alphabetically.
+
+> [!NOTE]
+> A warning is logged if the pattern matches no files.
+
+### `jsGlobs`
+
+Compiles glob imports into an object that maps file paths to their default
+exports. Use the special `glob:` prefix in an import statement:
+
+```javascript
+import components from "glob:./components/**/*.js";
+```
+
+This will generate individual imports and builds an object mapping. For
+example:
+
+```javascript
+import _glob_components_theme from "./components/theme.js";
+import _glob_components_shared_tooltip from "./components/shared/tooltip.js";
+const components = {
+  "components/theme": _glob_components_theme,
+  "components/shared/tooltip": _glob_components_shared_tooltip,
+};
+```
+
+> [!NOTE]
+> If no files match the pattern, an empty object is assigned.
 
 ### Custom plugins
 
