@@ -1,9 +1,9 @@
-# BunBunBundle
+# Bun, Bun, Bundle
 
 A self-contained asset bundler for Ruby powered by [Bun](https://bun.sh). No
-development dependencies, no complex configuration. Fast builds with CSS
-hot-reloading, fingerprinting, live reload, and a flexible plugin system. Works
-with Rails, Hanami, or any Rack app.
+development dependencies, no complex configuration. Lightning fast builds with
+CSS hot-reloading, fingerprinting, live reload, and a flexible plugin system.
+Works with Rails, Hanami, or any Rack app.
 
 ## Why use BunBunBundle?
 
@@ -28,18 +28,18 @@ browsers always fetch the right version.
 
 Development and production builds go through the exact same pipeline. The only
 differences are fingerprinting and minification being enabled in production,
-but nothing is holding you back form them in development as well.
+but nothing is holding you back from enabling them in development as well.
 
 ### Extensible plugin system
 
-Comes with built-in plugins for CSS glob imports, root aliases, and JS glob
-imports. Plugins are simple, plain JS files, so you can create your own JS/CSS
-transformers, and raw Bun plugins are supported as well.
+BunBunBundle comes with built-in plugins for CSS glob imports, root aliases,
+and JS glob imports. Plugins are simple, plain JS files, so you can create your
+own JS/CSS transformers, and raw Bun plugins are supported as well.
 
 ### Just one dependency: Bun
 
-The bundler ships with the gem. Bun is the only external requirement, so there
-are zero dev dependencies.
+The bundler ships with the gem. Bun is the only external requirement, so other
+than that, there are no dev dependencies.
 
 ## Installation
 
@@ -58,6 +58,18 @@ are zero dev dependencies.
    ```
 
 ## Usage with Rails
+
+BunBunBundle completely bypasses the Rails asset pipeline. If you're adding it
+to an existing app, you can remove Sprockets/Propshaft:
+
+- Remove `gem 'sprockets-rails'` or `gem 'propshaft'` from your `Gemfile`
+- Delete `config/initializers/assets.rb` if present
+
+For new apps, generate them without the asset pipeline:
+
+```sh
+rails new myapp --minimal --skip-asset-pipeline --skip-javascript
+```
 
 The gem auto-configures itself through a Railtie. All helpers are available in
 your views immediately:
@@ -81,7 +93,13 @@ stale asset caching.
 
 ## Usage with Hanami
 
-1. Require the Hanami integration:
+Hanami ships with its own esbuild-based asset pipeline. Since BunBunBundle
+replaces it entirely, you can clean up the default setup:
+
+- Remove `gem 'hanami-assets'` from your `Gemfile`
+- Delete `config/assets.js`, `package.json`, and `node_modules/`
+
+1. Set up the Hanami integration:
 
    ```ruby
    # config/app.rb
@@ -90,11 +108,14 @@ stale asset caching.
 
    module MyApp
      class App < Hanami::App
-       BunBunBundle.setup(root: root)
-       config.middleware.use BunBunBundle::DevCacheMiddleware if Hanami.env?(:development)
+       BunBunBundle.setup(root: root, hanami: config)
      end
    end
    ```
+
+   This loads the manifest, and in development automatically registers the
+   cache-busting middleware and configures the CSP to allow the live reload
+   script and WebSocket connection.
 
 2. Include the helpers in your views:
 
@@ -111,7 +132,7 @@ stale asset caching.
    end
    ```
 
-4. Use them in your templates:
+3. Use them in your templates:
 
    ```erb
    <%= bun_css_tag('css/app.css') %>
@@ -132,7 +153,8 @@ BunBunBundle.asset_host = 'https://cdn.example.com'
 
 ## Helpers
 
-All helpers are prefixed with `bun_` to avoid conflicts with framework helpers:
+All helpers are prefixed with `bun_` to avoid conflicts with existing framework
+helpers:
 
 | Helper                           | Description                                      |
 | -------------------------------- | ------------------------------------------------ |
@@ -191,7 +213,7 @@ Place a `config/bun.json` in your project root:
 }
 ```
 
-All values shown above are defaults, you only need to specify what you want to
+All values shown above are defaults. You only need to specify what you want to
 override.
 
 ## Plugins
@@ -252,8 +274,8 @@ your-app/
 
 BunBunBundle was originally built for [Fluck](https://fluck.site), a
 self-hostable website builder using [Lucky
-Framework](https://luckyframework.org/). I wanted to have a fast, comprehensive
-asset bundler that would not require too much maintenance in the long term.
+Framework](https://luckyframework.org/). I wanted to have a fast and modern
+asset bundler that would require minimal maintenance in the long term.
 
 Bun was the natural choice because it does almost everything:
 
@@ -265,10 +287,10 @@ Bun was the natural choice because it does almost everything:
 - Extendability with simple plugins
 
 It's also fast and reliable. We use this setup heavily in two Lucky apps and it
-is rock solid, and it has since been adopted by Lucky as the default builder.
+is rock solid. It has since been adopted by Lucky as the default builder.
 
-I wanted to have the same setup in my Ruby apps as well, that's when this Gem
-was born. I hope you enjoy it too!
+This Gem was born because I wanted to have the same setup in my Ruby apps as
+well. I hope you enjoy it too!
 
 ## Contributing
 
