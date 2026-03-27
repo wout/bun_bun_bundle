@@ -345,14 +345,14 @@ describe('loadPlugins', () => {
 })
 
 describe('aliases plugin', () => {
-  test('replaces $/ references with src path in CSS url()', async () => {
+  test('replaces $/ references with root path in CSS url()', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css': [
-        "body { background: url('$/images/bg.png'); }",
-        ".icon { background: url('$/images/icon.svg'); }"
+        "body { background: url('$/app/assets/images/bg.png'); }",
+        ".icon { background: url('$/app/assets/images/icon.svg'); }"
       ].join('\n'),
-      'src/images/bg.png': 'fake',
-      'src/images/icon.svg': '<svg/>'
+      'app/assets/images/bg.png': 'fake',
+      'app/assets/images/icon.svg': '<svg/>'
     })
 
     // The alias is resolved and Bun inlines the assets as data URIs
@@ -363,7 +363,7 @@ describe('aliases plugin', () => {
   test('replaces $/ references in JS imports', async () => {
     const content = await buildJS({
       'app/assets/js/app.js': "import utils from '$/lib/utils.js'\nconsole.log(utils)",
-      'src/lib/utils.js': 'export default 42'
+      'lib/utils.js': 'export default 42'
     })
 
     expect(content).not.toContain('$/')
@@ -373,7 +373,7 @@ describe('aliases plugin', () => {
   test('replaces $/ references in CSS @import', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css': "@import '$/lib/reset.css';",
-      'src/lib/reset.css': '* { margin: 0 }'
+      'lib/reset.css': '* { margin: 0 }'
     })
 
     expect(content).not.toContain('$/')
@@ -407,7 +407,7 @@ describe('aliases plugin', () => {
       ].join('\n')
     })
 
-    expect(content).not.toContain('/src/')
+    expect(content).not.toContain(TEST_DIR)
   })
 })
 
@@ -599,9 +599,9 @@ describe('plugin pipeline', () => {
   test('css plugins run in configured order', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css':
-        "@import './components/*.css';\nbody { background: url('$/images/bg.png'); }",
+        "@import './components/*.css';\nbody { background: url('$/app/assets/images/bg.png'); }",
       'app/assets/css/components/button.css': '.button { color: red }',
-      'src/images/bg.png': 'fake'
+      'app/assets/images/bg.png': 'fake'
     })
 
     expect(content).not.toContain('$/')

@@ -223,16 +223,16 @@ Three plugins are included out of the box.
 ### `aliases`
 
 Resolves `$/` root aliases to absolute paths in both CSS and JS files. This
-lets you reference assets and modules from the source root without worrying
+lets you reference assets and modules from the project root without worrying
 about relative paths.
 
 In CSS:
 
 ```css
-@import '$/lib/reset.css';
+@import '$/app/assets/css/reset.css';
 
 .logo {
-  background: url('$/images/logo.png');
+  background: url('$/app/assets/images/logo.png');
 }
 ```
 
@@ -242,7 +242,7 @@ In JS:
 import utils from '$/lib/utils.js'
 ```
 
-All `$/` references are resolved to the `src/` directory in your project root.
+All `$/` references are resolved to your project root.
 
 ### `cssGlobs`
 
