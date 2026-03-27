@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-27
+
+### Added
+
+- `BunBunBundle.setup(root:, hanami:)`, a single-call setup that
+  auto-configures middleware and CSP for Hanami in development
+- Missing `require 'bun_bun_bundle'` in the Hanami integration file
+
+### Changed
+
+- Railtie now uses `BunBunBundle.setup` internally, removing duplicated logic
+
 ## [0.1.1] - 2026-03-26
 
 ### Fixed
