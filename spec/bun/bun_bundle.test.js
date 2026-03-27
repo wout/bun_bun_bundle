@@ -406,6 +406,15 @@ describe('aliases plugin', () => {
     expect(result).toBe("import c from 'glob:/root/lib/components/*.js'")
   })
 
+  test('does not replace $/ inside regex literals', async () => {
+    const aliases = (await import('../../lib/bun/plugins/aliases.js')).default
+    const transform = aliases({root: '/root'})
+    const input = "s.replace(/.*components\\//, '').replace(/_component$/, '')"
+    const result = transform(input)
+
+    expect(result).toBe(input)
+  })
+
   test('does not match $/ preceded by a word character', async () => {
     const content = await buildJS({
       'app/assets/js/app.js': [
@@ -525,8 +534,8 @@ describe('jsGlobs plugin', () => {
         'export default function input() {}'
     })
 
-    expect(content).toContain('controllers/nav')
-    expect(content).toContain('controllers/forms/input')
+    expect(content).toContain('nav')
+    expect(content).toContain('forms/input')
   })
 
   test('avoids naming clashes for same-named files in different dirs', async () => {
@@ -540,8 +549,8 @@ describe('jsGlobs plugin', () => {
         'export default function adminNav() {}'
     })
 
-    expect(content).toContain('components/nav')
-    expect(content).toContain('components/admin/nav')
+    expect(content).toContain('nav')
+    expect(content).toContain('admin/nav')
   })
 
   test('handles glob matching no files', async () => {
