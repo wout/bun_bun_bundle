@@ -90,8 +90,8 @@ describe('loadConfig', () => {
     expect(BunBundle.config.entryPoints.js).toEqual(['app/assets/js/app.js'])
     expect(BunBundle.config.devServer.port).toBe(3002)
     expect(BunBundle.config.plugins).toEqual({
-      css: ['cssAliases', 'cssGlobs'],
-      js: ['jsGlobs']
+      css: ['aliases', 'cssGlobs'],
+      js: ['aliases', 'jsGlobs']
     })
   })
 
@@ -344,8 +344,8 @@ describe('loadPlugins', () => {
   })
 })
 
-describe('cssAliases plugin', () => {
-  test('replaces all $/ references with src path in url()', async () => {
+describe('aliases plugin', () => {
+  test('replaces $/ references with src path in CSS url()', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css': [
         "body { background: url('$/images/bg.png'); }",
@@ -360,6 +360,26 @@ describe('cssAliases plugin', () => {
     expect(content).toContain('url(')
   })
 
+  test('replaces $/ references in JS imports', async () => {
+    const content = await buildJS({
+      'app/assets/js/app.js': "import utils from '$/lib/utils.js'\nconsole.log(utils)",
+      'src/lib/utils.js': 'export default 42'
+    })
+
+    expect(content).not.toContain('$/')
+    expect(content).toContain('42')
+  })
+
+  test('replaces $/ references in CSS @import', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css': "@import '$/lib/reset.css';",
+      'src/lib/reset.css': '* { margin: 0 }'
+    })
+
+    expect(content).not.toContain('$/')
+    expect(content).toContain('margin')
+  })
+
   test('leaves non-alias urls untouched', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css':
@@ -367,6 +387,27 @@ describe('cssAliases plugin', () => {
     })
 
     expect(content).toContain('https://example.com/bg.png')
+  })
+
+  test('leaves non-alias imports untouched', async () => {
+    const content = await buildJS({
+      'app/assets/js/app.js': "import {x} from './utils.js'\nconsole.log(x)",
+      'app/assets/js/utils.js': 'export const x = 42'
+    })
+
+    expect(content).toContain('42')
+  })
+
+  test('does not match $/ preceded by a word character', async () => {
+    const content = await buildJS({
+      'app/assets/js/app.js': [
+        "const el = document.querySelector('div')",
+        "const path = '/api/test'",
+        "console.log(el, path)"
+      ].join('\n')
+    })
+
+    expect(content).not.toContain('/src/')
   })
 })
 
