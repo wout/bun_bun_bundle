@@ -398,6 +398,14 @@ describe('aliases plugin', () => {
     expect(content).toContain('42')
   })
 
+  test('resolves $/ inside prefixed strings like glob:$/', async () => {
+    const aliases = (await import('../../lib/bun/plugins/aliases.js')).default
+    const transform = aliases({root: '/root'})
+    const result = transform("import c from 'glob:$/lib/components/*.js'")
+
+    expect(result).toBe("import c from 'glob:/root/lib/components/*.js'")
+  })
+
   test('does not match $/ preceded by a word character', async () => {
     const content = await buildJS({
       'app/assets/js/app.js': [
