@@ -228,7 +228,7 @@ paths:
 
 ```css
 .logo {
-  background: url("$/images/logo.png");
+  background: url('$/images/logo.png');
 }
 ```
 
@@ -241,7 +241,7 @@ Expands glob patterns in CSS `@import` statements. Instead of manually listing
 every file, you can import an entire directory at once:
 
 ```css
-@import "./components/**/*.css";
+@import './components/**/*.css';
 ```
 
 This will be expanded into individual `@import` lines for each matching file,
@@ -256,19 +256,19 @@ Compiles glob imports into an object that maps file paths to their default
 exports. Use the special `glob:` prefix in an import statement:
 
 ```javascript
-import components from "glob:./components/**/*.js";
+import components from 'glob:./components/**/*.js'
 ```
 
 This will generate individual imports and builds an object mapping. For
 example:
 
 ```javascript
-import _glob_components_theme from "./components/theme.js";
-import _glob_components_shared_tooltip from "./components/shared/tooltip.js";
+import _glob_components_theme from './components/theme.js'
+import _glob_components_shared_tooltip from './components/shared/tooltip.js'
 const components = {
-  "components/theme": _glob_components_theme,
-  "components/shared/tooltip": _glob_components_shared_tooltip,
-};
+  'components/theme': _glob_components_theme,
+  'components/shared/tooltip': _glob_components_shared_tooltip
+}
 ```
 
 > [!NOTE]
@@ -276,25 +276,66 @@ const components = {
 
 ### Custom plugins
 
-Create a JS file that exports a factory function:
+Custom plugins are JS files referenced by their path in the config. Each file
+must export a factory function that receives a context object with `root`
+(project root path) and `prod` (boolean indicating production mode). What the
+factory returns determines the plugin type.
+
+#### Simple transform plugins
+
+A simple transform plugin returns a function that receives the file content as
+a string and an `args` object with the file's `path`. It should return the
+transformed content. The transform can be synchronous or asynchronous.
+
+Transforms are chained in the order they appear in the config, so each
+transform receives the output of the previous one.
 
 ```javascript
 // config/bun/banner.js
 
-export default function banner({ prod }) {
-  return (content) => {
-    const stamp = prod ? "" : ` (dev build ${new Date().toISOString()})`;
-    return `/* My App${stamp} */\n${content}`;
-  };
+export default function banner({prod}) {
+  return content => {
+    const stamp = prod ? '' : ` (dev build ${new Date().toISOString()})`
+    return `/* My App${stamp} */\n${content}`
+  }
 }
 ```
 
-Then reference it in your config:
+#### Raw Bun plugins
+
+If the factory returns an object with a `setup` method instead of a function,
+it is treated as a raw
+[Bun plugin](https://bun.sh/docs/bundler/plugins). This gives you full access
+to Bun's plugin API, including `onLoad`, `onResolve`, and custom loaders.
+
+```javascript
+// config/bun/svg.js
+
+export default function svg() {
+  return {
+    name: 'svg-loader',
+    setup(build) {
+      build.onLoad({filter: /\.svg$/}, async args => {
+        const text = await Bun.file(args.path).text()
+        return {
+          contents: `export default ${JSON.stringify(text)}`,
+          loader: 'js'
+        }
+      })
+    }
+  }
+}
+```
+
+#### Registering custom plugins
+
+Reference custom plugins by their file path in your config:
 
 ```json
 {
   "plugins": {
-    "css": ["cssAliases", "cssGlobs", "config/bun/banner.js"]
+    "css": ["cssAliases", "cssGlobs", "config/bun/banner.js"],
+    "js": ["jsGlobs", "config/bun/svg.js"]
   }
 }
 ```
