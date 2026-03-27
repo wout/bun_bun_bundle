@@ -174,7 +174,8 @@ All tag helpers accept additional HTML attributes:
 
 ## CLI
 
-Build your assets using the bundled CLI:
+Build your assets using the bundled CLI (`bbb` is available as a shorter
+alias):
 
 ```sh
 # Development: builds, watches, and starts the live reload server
@@ -186,6 +187,10 @@ bun_bun_bundle build
 # Development with a production build (fingerprinting + minification)
 bun_bun_bundle dev --prod
 ```
+
+> [!NOTE]
+> When running from a Procfile (e.g. with Overmind or Foreman), use
+> `bundle exec bun_bun_bundle` to ensure the correct gem version is loaded.
 
 ## Configuration
 
