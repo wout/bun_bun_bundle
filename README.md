@@ -32,7 +32,7 @@ but nothing is holding you back from enabling them in development as well.
 
 ### Extensible plugin system
 
-BunBunBundle comes with built-in plugins for CSS glob imports, root aliases,
+BunBunBundle comes with built-in plugins for root aliases, CSS glob imports,
 and JS glob imports. Plugins are simple, plain JS files, so you can create your
 own JS/CSS transformers, and raw Bun plugins are supported as well.
 
@@ -207,8 +207,8 @@ Place a `config/bun.json` in your project root:
     "secure": false
   },
   "plugins": {
-    "css": ["cssAliases", "cssGlobs"],
-    "js": ["jsGlobs"]
+    "css": ["aliases", "cssGlobs"],
+    "js": ["aliases", "jsGlobs"]
   }
 }
 ```
@@ -220,20 +220,29 @@ override.
 
 Three plugins are included out of the box.
 
-### `cssAliases`
+### `aliases`
 
-Resolves `$/` root aliases in CSS `url()` references to absolute paths. This
-lets you reference assets from the source root without worrying about relative
-paths:
+Resolves `$/` root aliases to absolute paths in both CSS and JS files. This
+lets you reference assets and modules from the source root without worrying
+about relative paths.
+
+In CSS:
 
 ```css
+@import '$/lib/reset.css';
+
 .logo {
   background: url('$/images/logo.png');
 }
 ```
 
-This will be resolved to an absolute path like
-`url('/absolute/path/to/src/images/logo.png')`.
+In JS:
+
+```javascript
+import utils from '$/lib/utils.js'
+```
+
+All `$/` references are resolved to the `src/` directory in your project root.
 
 ### `cssGlobs`
 
@@ -334,8 +343,8 @@ Reference custom plugins by their file path in your config:
 ```json
 {
   "plugins": {
-    "css": ["cssAliases", "cssGlobs", "config/bun/banner.js"],
-    "js": ["jsGlobs", "config/bun/svg.js"]
+    "css": ["aliases", "cssGlobs", "config/bun/banner.js"],
+    "js": ["aliases", "jsGlobs", "config/bun/svg.js"]
   }
 }
 ```
