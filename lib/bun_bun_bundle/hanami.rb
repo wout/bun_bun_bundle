@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'bun_bun_bundle'
+
 module BunBunBundle
   # Hanami integration for BunBunBundle.
   #
@@ -9,8 +11,7 @@ module BunBunBundle
   #
   #   module MyApp
   #     class App < Hanami::App
-  #       BunBunBundle.setup(root: root)
-  #       config.middleware.use BunBunBundle::DevCacheMiddleware if Hanami.env?(:development)
+  #       BunBunBundle.setup(root: root, hanami: config)
   #     end
   #   end
   #

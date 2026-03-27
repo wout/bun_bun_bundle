@@ -38,10 +38,15 @@ module BunBunBundle
 
     # Loads config and manifest. Call this from Hanami's config/app.rb or
     # any Rack app's startup.
-    def setup(root: Dir.pwd)
+    #
+    # Pass `hanami: config` from within a Hanami::App class body to
+    # automatically register middleware and configure CSP for development.
+    def setup(root: Dir.pwd, hanami: nil)
       self.config = Config.load(root: root.to_s)
       options = development? ? {} : { retries: 1, delay: 0 }
       self.manifest = Manifest.load(root: root.to_s, **options)
+
+      configure_hanami(hanami) if hanami
     end
 
     # Returns the path to the bundled JS files shipped with the gem.
@@ -55,6 +60,16 @@ module BunBunBundle
       @manifest = nil
       @asset_host = nil
       @environment = nil
+    end
+
+    private
+
+    def configure_hanami(hanami_config)
+      return unless development?
+
+      hanami_config.middleware.use DevCacheMiddleware
+      hanami_config.actions.content_security_policy[:script_src] += " 'unsafe-inline'"
+      hanami_config.actions.content_security_policy[:connect_src] += " #{config.dev_server.ws_url}"
     end
   end
 end
