@@ -5,6 +5,10 @@ development dependencies, no complex configuration. Lightning fast builds with
 CSS hot-reloading, fingerprinting, live reload, and a flexible plugin system.
 Works with Rails, Hanami, or any Rack app.
 
+> [!Note]
+> The original repository is hosted at
+> [https://codeberg.org/w0u7/bun_bun_bundle](https://codeberg.org/w0u7/bun_bun_bundle).
+
 ## Why use BunBunBundle?
 
 ### Lightning fast bundling
