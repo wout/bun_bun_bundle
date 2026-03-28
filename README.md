@@ -65,8 +65,9 @@ your views immediately:
 </html>
 ```
 
-The `DevCacheMiddleware` is automatically inserted in development to prevent
-stale asset caching.
+> [!NOTE]
+> The `DevCacheMiddleware` is automatically inserted in development to prevent
+> stale asset caching.
 
 ## Usage with Hanami
 
@@ -74,7 +75,8 @@ Hanami ships with its own esbuild-based asset pipeline. Since BunBunBundle
 replaces it entirely, you can clean up the default setup:
 
 - Remove `gem 'hanami-assets'` from your `Gemfile`
-- Delete `config/assets.js`, `package.json`, and `node_modules/`
+- Delete `config/assets.js`
+- Remove all dev dependencies from `package.json`
 
 1. Set up the Hanami integration:
 
@@ -254,11 +256,11 @@ This will generate individual imports and builds an object mapping. For
 example:
 
 ```javascript
-import _glob_components_theme from './components/theme.js'
-import _glob_components_shared_tooltip from './components/shared/tooltip.js'
+import _glob_theme from './components/theme.js'
+import _glob_shared_tooltip from './components/shared/tooltip.js'
 const components = {
-  'components/theme': _glob_components_theme,
-  'components/shared/tooltip': _glob_components_shared_tooltip
+  'theme': _glob_theme,
+  'shared/tooltip': _glob_shared_tooltip
 }
 ```
 
@@ -268,15 +270,26 @@ const components = {
 ### Custom plugins
 
 Custom plugins are JS files referenced by their path in the config. Each file
-must export a factory function that receives a context object with `root`
-(project root path) and `prod` (boolean indicating production mode). What the
-factory returns determines the plugin type.
+must export a factory function that receives a context object. What the factory
+returns determines the plugin type.
+
+The context object has the following properties:
+
+| Property   | Description                                  |
+| ---------- | -------------------------------------------- |
+| `root`     | Absolute path to the project root            |
+| `config`   | The resolved `bun.json` configuration object |
+| `dev`      | `true` when running in development mode      |
+| `prod`     | `true` when running in production mode       |
+| `manifest` | The current asset manifest object            |
 
 #### Simple transform plugins
 
 A simple transform plugin returns a function that receives the file content as
-a string and an `args` object with the file's `path`. It should return the
-transformed content. The transform can be synchronous or asynchronous.
+a string and an `args` object from Bun's
+[`onLoad`](https://bun.sh/docs/bundler/plugins#onload) hook (containing `path`,
+`loader`, etc.). It should return the transformed content. The transform can be
+synchronous or asynchronous.
 
 Transforms are chained in the order they appear in the config, so each
 transform receives the output of the previous one.
@@ -285,8 +298,8 @@ transform receives the output of the previous one.
 // config/bun/banner.js
 
 export default function banner({prod}) {
-  return content => {
-    const stamp = prod ? '' : ` (dev build ${new Date().toISOString()})`
+  return (content, args) => {
+    const stamp = prod ? '' : ` (dev ${args.path})`
     return `/* My App${stamp} */\n${content}`
   }
 }
@@ -330,6 +343,11 @@ Reference custom plugins by their file path in your config:
   }
 }
 ```
+
+> [!WARNING]
+> The order of the plugins matter here. For example, the aliases plugin needs
+> to resolve the paths first before the glob plugin can do its work. Keep that
+> in mind for your own plugins too.
 
 ## Project structure
 
