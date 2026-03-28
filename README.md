@@ -5,11 +5,6 @@ development dependencies, no complex configuration. Lightning fast builds with
 CSS hot-reloading, fingerprinting, live reload, and a flexible plugin system.
 Works with Rails, Hanami, or any Rack app.
 
-> [!Note]
-> The original repository is hosted at
-> [Codeberg](https://codeberg.org/w0u7/bun_bun_bundle). The [GitHub
-> repo](https://github.com/wout/bun_bun_bundle) is just a mirror.
-
 ## Why use BunBunBundle?
 
 - **Lightning fast.** Bun's native bundler builds assets in milliseconds.
@@ -18,6 +13,11 @@ Works with Rails, Hanami, or any Rack app.
 - **No surprises in production.** Dev and prod go through the same pipeline.
 - **Extensible.** Plugins are simple, tiny JavaScript files.
 - **One dependency: Bun.** Everything is included, no other dev dependencies.
+
+> [!Note]
+> The original repository is hosted at
+> [Codeberg](https://codeberg.org/w0u7/bun_bun_bundle). The [GitHub
+> repo](https://github.com/wout/bun_bun_bundle) is just a mirror.
 
 ## Installation
 
@@ -346,7 +346,7 @@ Reference custom plugins by their file path in your config:
 ```
 
 > [!WARNING]
-> The order of the plugins matter here. For example, the aliases plugin needs
+> The order of the plugins matters here. For example, the aliases plugin needs
 > to resolve the paths first before the glob plugin can do its work. Keep that
 > in mind for your own plugins too.
 
