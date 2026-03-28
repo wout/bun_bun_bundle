@@ -84,7 +84,7 @@ replaces it entirely, you can clean up the default setup:
    ```ruby
    # config/app.rb
 
-   require 'bun_bun_bundle/hanami'
+   require 'bun_bun_bundle'
 
    module MyApp
      class App < Hanami::App
