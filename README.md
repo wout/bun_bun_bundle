@@ -401,7 +401,36 @@ well. I hope you enjoy it too!
 
 ## Contributing
 
+### Setup
+
+```sh
+git clone https://codeberg.org/w0u7/bun_bun_bundle.git
+cd bun_bun_bundle
+bundle install
+```
+
+### Running tests
+
+```sh
+bundle exec rake test       # run all tests
+bundle exec rake test:ruby  # Ruby tests only (Minitest, in spec/)
+bundle exec rake test:bun   # JS tests only (Bun, plugin tests)
+```
+
+> [!NOTE]
+> `bundle exec rake` with no arguments runs all tests too.
+
+### Linting
+
+```sh
+bundle exec rubocop
+```
+
+### Commit conventions
+
 We use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+### Submitting changes
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
