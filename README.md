@@ -198,8 +198,9 @@ Place a `config/bun.json` in your project root:
 }
 ```
 
-All values shown above are defaults. You only need to specify what you want to
-override.
+> [!TIP]
+> Creating a `bun.json` file is entirely optional. All values shown above are
+> defaults, you only need to specify what you want to override.
 
 ## Plugins
 
