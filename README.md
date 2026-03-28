@@ -240,10 +240,12 @@ every file, you can import an entire directory at once:
 ```
 
 This will be expanded into individual `@import` lines for each matching file,
-sorted alphabetically.
+sorted alphabetically. A warning is logged if the pattern matches no files.
 
-> [!NOTE]
-> A warning is logged if the pattern matches no files.
+> [!WARNING]
+> Always include the file extension in glob patterns (e.g., `**/*.css` instead
+> of `**/*`). Without it, editor temp files like Vim's `~` backups will be
+> picked up by the glob, causing build failures during development.
 
 ### `jsGlobs`
 
