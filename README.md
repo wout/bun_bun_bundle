@@ -257,11 +257,11 @@ This will generate individual imports and builds an object mapping. For
 example:
 
 ```javascript
-import _glob_theme from './components/theme.js'
-import _glob_shared_tooltip from './components/shared/tooltip.js'
+import _glob_components_theme from './components/theme.js'
+import _glob_components_shared_tooltip from './components/shared/tooltip.js'
 const components = {
-  'theme': _glob_theme,
-  'shared/tooltip': _glob_shared_tooltip
+  'theme': _glob_components_theme,
+  'shared/tooltip': _glob_components_shared_tooltip
 }
 ```
 
