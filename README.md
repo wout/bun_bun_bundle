@@ -369,6 +369,25 @@ your-app/
     └── bun-manifest.json     # Asset manifest (generated)
 ```
 
+## Deploying with Docker
+
+Install Bun, your JS dependencies, then run the build step:
+
+```dockerfile
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+
+COPY . .
+RUN bundle exec bun_bun_bundle build
+```
+
+> [!NOTE]
+> If you're using BunBunBundle in Rails as your only asset pipeline, you can
+> skip the `rails assets:precompile` step entirely.
+
 ## Origins
 
 BunBunBundle was originally built for [Fluck](https://fluck.site), a
