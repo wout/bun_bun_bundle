@@ -11,39 +11,12 @@ Works with Rails, Hanami, or any Rack app.
 
 ## Why use BunBunBundle?
 
-### Lightning fast bundling
-
-BunBunBundle leverages Bun's native bundler which is orders of magnitude faster
-than traditional Node.js-based tools. Your assets are built in milliseconds,
-not seconds.
-
-### CSS hot-reloading
-
-CSS changes are hot-reloaded in the browser without a full page refresh. Your
-state stays intact, your scroll position is preserved, and you see changes
-instantly.
-
-### Asset fingerprinting
-
-Every asset is fingerprinted with a content-based hash in production, so
-browsers always fetch the right version.
-
-### No surprises in production
-
-Development and production builds go through the exact same pipeline. The only
-differences are fingerprinting and minification being enabled in production,
-but nothing is holding you back from enabling them in development as well.
-
-### Extensible plugin system
-
-BunBunBundle comes with built-in plugins for root aliases, CSS glob imports,
-and JS glob imports. Plugins are simple, plain JS files, so you can create your
-own JS/CSS transformers, and raw Bun plugins are supported as well.
-
-### Just one dependency: Bun
-
-The bundler ships with the gem. Bun is the only external requirement, so other
-than that, there are no dev dependencies.
+- **Lightning fast.** Bun's native bundler builds assets in milliseconds.
+- **CSS hot-reloading.** Instant changes without a full page refresh.
+- **Asset fingerprinting.** Fast, content-based file hashing.
+- **No surprises in production.** Dev and prod go through the same pipeline.
+- **Extensible.** Plugins are simple, tiny JavaScript files.
+- **One dependency: Bun.** Everything is included, no other dev dependencies.
 
 ## Installation
 
