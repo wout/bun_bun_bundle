@@ -57,11 +57,11 @@ your views immediately:
 <html>
 <head>
   <%= bun_css_tag('css/app.css') %>
+  <%= bun_js_tag('js/app.js', defer: true) %>
+  <%= bun_reload_tag %>
 </head>
 <body>
   <%= bun_img_tag('images/logo.png', alt: 'My App') %>
-  <%= bun_js_tag('js/app.js', defer: true) %>
-  <%= bun_reload_tag %>
 </body>
 </html>
 ```
