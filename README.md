@@ -7,7 +7,8 @@ Works with Rails, Hanami, or any Rack app.
 
 > [!Note]
 > The original repository is hosted at
-> [https://codeberg.org/w0u7/bun_bun_bundle](https://codeberg.org/w0u7/bun_bun_bundle).
+> [Codeberg](https://codeberg.org/w0u7/bun_bun_bundle). The [GitHub
+> repo](https://github.com/wout/bun_bun_bundle) is just a mirror.
 
 ## Why use BunBunBundle?
 
