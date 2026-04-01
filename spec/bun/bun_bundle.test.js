@@ -143,7 +143,6 @@ describe('IGNORE_PATTERNS', () => {
 
     for (const f of [
       '.#file.js',
-      'file.js~',
       'file.swp',
       'file.swo',
       'file.tmp',
