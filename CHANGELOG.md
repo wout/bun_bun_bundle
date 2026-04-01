@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7] - 2026-04-01
+
+### Fixed
+
+- Vim file saves are now detected by the watcher (tilde backup files trigger
+  a rebuild for the original file, with debouncing to prevent double builds)
+- CSS build errors now show the actual error details (file, line, message)
+  instead of just "Bundle failed"
+
 ## [0.3.6] - 2026-03-28
 
 ### Removed
