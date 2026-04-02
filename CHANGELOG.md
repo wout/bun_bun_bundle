@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-04-02
+
+### Added
+
+- Tag helpers now support Rails-style nested data/aria attributes
+  (`data: { turbo_track: "reload" }` → `data-turbo-track="reload"`)
+- Tag helpers now support Lucky-style underscored attributes
+  (`data_turbo_track: "reload"` → `data-turbo-track="reload"`)
+
+### Changed
+
+- Removed leading underscore from private helper method names (e.g.
+  `_bun_html_attrs` → `bun_html_attrs`)
+
 ## [0.3.7] - 2026-04-01
 
 ### Fixed
