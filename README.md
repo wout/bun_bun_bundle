@@ -14,6 +14,9 @@ Works with Rails, Hanami, or any Rack app.
 - **Extensible.** Plugins are simple, tiny JavaScript files.
 - **One dependency: Bun.** Everything is included, no other dev dependencies.
 
+[![CI](https://codeberg.org/w0u7/bun_bun_bundle/actions/workflows/test.yml/badge.svg)](https://codeberg.org/w0u7/bun_bun_bundle/actions?workflow=test.yml)
+[![Gem Version](https://badge.fury.io/rb/bun_bun_bundle.svg)](https://rubygems.org/gems/bun_bun_bundle)
+
 > [!Note]
 > The original repository is hosted at
 > [Codeberg](https://codeberg.org/w0u7/bun_bun_bundle). The [GitHub
