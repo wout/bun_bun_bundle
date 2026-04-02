@@ -9,7 +9,8 @@ jobs:
     container:
       image: ruby:${{ matrix.ruby-version }}
     steps:
-      - uses: actions/checkout@v4
+      - run: git clone --depth 1 --branch ${{ github.ref_name }} ${{ github.server_url }}/${{ github.repository }} .
+
       - run: curl -fsSL https://bun.sh/install | bash
       - run: |
           export PATH="$HOME/.bun/bin:$PATH"
