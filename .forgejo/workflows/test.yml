@@ -1,0 +1,17 @@
+on: [push]
+
+jobs:
+  test:
+    runs-on: docker
+    strategy:
+      matrix:
+        ruby-version: ['3.3', '4.0']
+    container:
+      image: ruby:${{ matrix.ruby-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: curl -fsSL https://bun.sh/install | bash
+      - run: |
+          export PATH="$HOME/.bun/bin:$PATH"
+          bundle install
+          rake test
