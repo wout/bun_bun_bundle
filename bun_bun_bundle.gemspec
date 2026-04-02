@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
     'README.md',
   ]
   spec.bindir = 'exe'
-  spec.executables = ['bun_bun_bundle', 'bbb']
+  spec.executables = %w[bun_bun_bundle bbb]
 
   spec.add_dependency 'json'
 end
