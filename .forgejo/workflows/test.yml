@@ -2,7 +2,7 @@ on: [push]
 
 jobs:
   test:
-    runs-on: docker
+    runs-on: codeberg-tiny
     strategy:
       matrix:
         ruby-version: ['3.3', '4.0']
