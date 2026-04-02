@@ -35,7 +35,7 @@ module BunBunBundle
     def bun_js_tag(source, **options)
       src = bun_asset(source)
       attrs = { type: 'text/javascript' }.merge(options).merge(src: src)
-      _bun_safe(%(<script #{_bun_html_attrs(attrs)}></script>))
+      bun_safe(%(<script #{bun_html_attrs(attrs)}></script>))
     end
 
     # Generates a <link> tag for a CSS entry point.
@@ -46,7 +46,7 @@ module BunBunBundle
     def bun_css_tag(source, **options)
       href = bun_asset(source)
       attrs = { type: 'text/css', rel: 'stylesheet' }.merge(options).merge(href: href)
-      _bun_safe(%(<link #{_bun_html_attrs(attrs)}>))
+      bun_safe(%(<link #{bun_html_attrs(attrs)}>))
     end
 
     # Generates an <img> tag for an image asset.
@@ -58,18 +58,30 @@ module BunBunBundle
       src = bun_asset(source)
       alt = options.delete(:alt) || File.basename(source, '.*').tr('-_', ' ').capitalize
       attrs = { alt: alt }.merge(options).merge(src: src)
-      _bun_safe(%(<img #{_bun_html_attrs(attrs)}>))
+      bun_safe(%(<img #{bun_html_attrs(attrs)}>))
     end
 
     private
 
-    def _bun_html_attrs(hash)
-      hash.compact.map do |k, v|
-        v == true ? k.to_s : %(#{k}="#{_bun_escape_attr(v)}")
+    def bun_html_attrs(hash)
+      bun_flatten_attrs(hash).compact.map do |k, v|
+        k = k.to_s.tr('_', '-')
+        v == true ? k : %(#{k}="#{bun_escape_attr(v)}")
       end.join(' ')
     end
 
-    def _bun_escape_attr(value)
+    def bun_flatten_attrs(hash, prefix: nil)
+      hash.each_with_object({}) do |(k, v), flat|
+        key = prefix ? :"#{prefix}_#{k}" : k
+        if v.is_a?(Hash)
+          flat.merge!(bun_flatten_attrs(v, prefix: key))
+        else
+          flat[key] = v
+        end
+      end
+    end
+
+    def bun_escape_attr(value)
       value.to_s.gsub('&', '&amp;').gsub('"', '&quot;').gsub('<', '&lt;').gsub('>', '&gt;')
     end
   end

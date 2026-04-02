@@ -5,9 +5,9 @@ module BunBunBundle
     private
 
     if String.method_defined?(:html_safe)
-      def _bun_safe(html) = html.html_safe
+      def bun_safe(html) = html.html_safe
     else
-      def _bun_safe(html) = html
+      def bun_safe(html) = html
     end
   end
 end

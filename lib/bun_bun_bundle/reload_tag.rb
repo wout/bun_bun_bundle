@@ -58,7 +58,7 @@ module BunBunBundle
         })()
         </script>
       HTML
-      _bun_safe(html)
+      bun_safe(html)
     end
   end
 end

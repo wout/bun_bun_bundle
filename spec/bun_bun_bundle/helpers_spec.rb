@@ -96,6 +96,56 @@ class HelpersTest < Minitest::Test
     assert_includes html, 'alt="Hero banner"'
   end
 
+  # data attributes (Rails-style nested hash)
+
+  def test_data_attributes_with_nested_hash
+    html = bun_js_tag('js/app.js', data: { turbo_track: 'reload' })
+
+    assert_includes html, 'data-turbo-track="reload"'
+  end
+
+  def test_data_attributes_with_multiple_nested_keys
+    html = bun_js_tag('js/app.js', data: { controller: 'app', action: 'click' })
+
+    assert_includes html, 'data-controller="app"'
+    assert_includes html, 'data-action="click"'
+  end
+
+  def test_data_attributes_with_boolean_value_in_hash
+    html = bun_js_tag('js/app.js', data: { turbo: true })
+
+    assert_includes html, 'data-turbo'
+    refute_includes html, 'data-turbo="'
+  end
+
+  # data attributes (Lucky-style underscored keys)
+
+  def test_data_attributes_with_underscored_key
+    html = bun_js_tag('js/app.js', data_turbo_track: 'reload')
+
+    assert_includes html, 'data-turbo-track="reload"'
+  end
+
+  def test_data_attributes_with_single_underscore
+    html = bun_css_tag('css/app.css', data_controller: 'styles')
+
+    assert_includes html, 'data-controller="styles"'
+  end
+
+  # aria attributes
+
+  def test_aria_attributes_with_nested_hash
+    html = bun_js_tag('js/app.js', aria: { label: 'Main script' })
+
+    assert_includes html, 'aria-label="Main script"'
+  end
+
+  def test_aria_attributes_with_underscored_key
+    html = bun_img_tag('images/logo.png', aria_hidden: true)
+
+    assert_includes html, 'aria-hidden'
+  end
+
   # HTML escaping
 
   def test_escapes_html_in_attributes
