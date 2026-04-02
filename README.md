@@ -420,7 +420,9 @@ It's also fast and reliable. We use this setup heavily in two Lucky apps and it
 is rock solid. It has since been adopted by Lucky as the default builder.
 
 This Gem was born because I wanted to have the same setup in my Ruby apps as
-well. I hope you enjoy it too!
+well. We now use it for an important Rails app in production.
+
+I hope you enjoy it too!
 
 ## Contributing
 
