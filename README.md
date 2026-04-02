@@ -152,6 +152,15 @@ All tag helpers accept additional HTML attributes:
 <%= bun_img_tag('images/logo.png', alt: 'My App', class: 'logo') %>
 ```
 
+Data and aria attributes can be passed as nested hashes (Rails-style) or with
+underscores (Lucky-style). Underscores are converted to hyphens automatically:
+
+```erb
+<%= bun_js_tag('js/app.js', data: { turbo_track: "reload" }) %>
+<%= bun_js_tag('js/app.js', data_turbo_track: "reload") %>
+<%# Both render: data-turbo-track="reload" %>
+```
+
 ## CLI
 
 Build your assets using the bundled CLI (`bbb` is available as a shorter
