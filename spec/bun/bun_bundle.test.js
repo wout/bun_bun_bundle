@@ -200,6 +200,34 @@ describe('buildAssets', () => {
     expect(BunBundle.manifest['js/admin.js']).toBe('js/admin.js')
   })
 
+  test('builds TypeScript files', async () => {
+    await setupProject(
+      {'app/assets/js/app.ts': 'const msg: string = "hello"\nconsole.log(msg)'},
+      {entryPoints: {js: ['app/assets/js/app.ts']}}
+    )
+    await BunBundle.buildJS()
+
+    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
+    expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js'))).toBe(true)
+    expect(readOutput('js/app.js')).toContain('hello')
+  })
+
+  test('builds TSX files', async () => {
+    await setupProject(
+      {
+        'app/assets/js/app.tsx': [
+          'function App(): string { return "tsx works" }',
+          'console.log(App())'
+        ].join('\n')
+      },
+      {entryPoints: {js: ['app/assets/js/app.tsx']}}
+    )
+    await BunBundle.buildJS()
+
+    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
+    expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js'))).toBe(true)
+  })
+
   test('builds multiple CSS entry points', async () => {
     await buildCSS(
       {
@@ -386,6 +414,21 @@ describe('aliases plugin', () => {
     })
 
     expect(content).toContain('https://example.com/bg.png')
+  })
+
+  test('replaces $/ references in TypeScript imports', async () => {
+    await setupProject(
+      {
+        'app/assets/js/app.ts': "import utils from '$/lib/utils.ts'\nconsole.log(utils)",
+        'lib/utils.ts': 'const val: number = 99\nexport default val'
+      },
+      {entryPoints: {js: ['app/assets/js/app.ts']}}
+    )
+    await BunBundle.buildJS()
+    const content = readOutput('js/app.js')
+
+    expect(content).not.toContain('$/')
+    expect(content).toContain('99')
   })
 
   test('leaves non-alias imports untouched', async () => {
