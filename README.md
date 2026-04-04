@@ -173,11 +173,14 @@ alias):
 # Development: builds, watches, and starts the live reload server
 bun_bun_bundle dev
 
-# Production: builds with fingerprinting and minification
+# Build assets
 bun_bun_bundle build
 
-# Development with a production build (fingerprinting + minification)
-bun_bun_bundle dev --prod
+# Build with fingerprinting and minification
+bun_bun_bundle build --prod
+
+# Development with verbose WebSocket logging
+bun_bun_bundle dev --debug
 ```
 
 > [!NOTE]
@@ -396,7 +399,7 @@ COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 COPY . .
-RUN bundle exec bun_bun_bundle build
+RUN bundle exec bun_bun_bundle build --prod
 ```
 
 > [!NOTE]
