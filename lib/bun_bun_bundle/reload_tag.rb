@@ -31,6 +31,7 @@ module BunBunBundle
         (() => {
           const cssPaths = #{css_paths.to_json};
           const ws = new WebSocket('#{config.dev_server.ws_url}')
+          let connected = false
 
           ws.onmessage = (event) => {
             const data = JSON.parse(event.data)
@@ -53,8 +54,13 @@ module BunBunBundle
             }
           }
 
-          ws.onopen = () => console.log('\\u25b8 Live reload connected')
-          ws.onclose = () => setTimeout(() => location.reload(), 2000)
+          ws.onopen = () => {
+            connected = true
+            console.log('\\u25b8 Live reload connected')
+          }
+          ws.onclose = () => {
+            if (connected) setTimeout(() => location.reload(), 2000)
+          }
         })()
         </script>
       HTML
