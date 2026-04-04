@@ -91,6 +91,7 @@ describe('loadConfig', () => {
   test('uses defaults without a config file', () => {
     BunBundle.loadConfig()
     expect(BunBundle.config.outDir).toBe('public/assets')
+    expect(BunBundle.config.watchDirs).toEqual(['app/assets'])
     expect(BunBundle.config.entryPoints.js).toEqual(['app/assets/js/app.js'])
     expect(BunBundle.config.devServer.port).toBe(3002)
     expect(BunBundle.config.plugins).toEqual({
@@ -111,6 +112,17 @@ describe('loadConfig', () => {
     expect(BunBundle.config.devServer.port).toBe(4000)
     expect(BunBundle.config.devServer.host).toBe('127.0.0.1')
     expect(BunBundle.config.entryPoints.js).toEqual(['app/assets/js/app.js'])
+  })
+
+  test('merges watchDirs from user config', () => {
+    createFile(
+      'config/bun.json',
+      JSON.stringify({watchDirs: ['src/js', 'src/css']})
+    )
+
+    BunBundle.loadConfig()
+
+    expect(BunBundle.config.watchDirs).toEqual(['src/js', 'src/css'])
   })
 
   test('merges listenHost into devServer config', () => {
