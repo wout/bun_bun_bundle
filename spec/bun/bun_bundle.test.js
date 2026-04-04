@@ -187,6 +187,16 @@ describe('buildAssets', () => {
     expect(BunBundle.manifest['js/app.js']).toBeUndefined()
   })
 
+  test('accepts a string entry point', async () => {
+    await setupProject(
+      {'app/assets/js/app.js': 'console.log("single")'},
+      {entryPoints: {js: 'app/assets/js/app.js'}}
+    )
+    await BunBundle.buildJS()
+
+    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
+  })
+
   test('builds multiple JS entry points', async () => {
     await buildJS(
       {
