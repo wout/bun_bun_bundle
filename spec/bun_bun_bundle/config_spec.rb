@@ -21,6 +21,15 @@ class ConfigTest < Minitest::Test
     assert_equal %w[app/assets/css/app.css], config.entry_points.css
   end
 
+  def test_entry_points_accepts_strings
+    config = BunBunBundle::Config.new(
+      'entryPoints' => { 'js' => 'app/assets/js/app.js', 'css' => 'app/assets/css/app.css' },
+    )
+
+    assert_equal %w[app/assets/js/app.js], config.entry_points.js
+    assert_equal %w[app/assets/css/app.css], config.entry_points.css
+  end
+
   def test_dev_server_defaults
     config = BunBunBundle::Config.new
 

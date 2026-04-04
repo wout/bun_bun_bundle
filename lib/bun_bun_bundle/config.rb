@@ -28,8 +28,8 @@ module BunBunBundle
       attr_reader :js, :css
 
       def initialize(data = {})
-        @js = data.fetch('js', %w[app/assets/js/app.js])
-        @css = data.fetch('css', %w[app/assets/css/app.css])
+        @js = Array(data.fetch('js', %w[app/assets/js/app.js]))
+        @css = Array(data.fetch('css', %w[app/assets/css/app.css]))
       end
     end
 
