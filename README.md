@@ -217,6 +217,17 @@ Place a `config/bun.json` in your project root:
 > Creating a `bun.json` file is entirely optional. All values shown above are
 > defaults, you only need to specify what you want to override.
 
+If you're developing inside a Docker container, set `listenHost` so the
+WebSocket server accepts connections from the host machine:
+
+```json
+{
+  "devServer": {
+    "listenHost": "0.0.0.0"
+  }
+}
+```
+
 ## Plugins
 
 Three plugins are included out of the box.
