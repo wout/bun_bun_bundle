@@ -200,6 +200,7 @@ Place a `config/bun.json` in your project root:
   "outDir": "public/assets",
   "publicPath": "/assets",
   "manifestPath": "public/bun-manifest.json",
+  "watchDirs": ["app/assets"],
   "staticDirs": ["app/assets/images", "app/assets/fonts"],
   "devServer": {
     "host": "127.0.0.1",
