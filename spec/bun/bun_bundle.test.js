@@ -11,6 +11,7 @@ beforeEach(() => {
   BunBundle.manifest = {}
   BunBundle.config = null
   BunBundle.plugins = []
+  BunBundle.debug = false
   BunBundle.prod = false
   BunBundle.dev = false
   BunBundle.root = TEST_DIR
@@ -58,6 +59,9 @@ describe('flags', () => {
 
     BunBundle.flags({prod: true})
     expect(BunBundle.prod).toBe(true)
+
+    BunBundle.flags({debug: true})
+    expect(BunBundle.debug).toBe(true)
 
     BunBundle.dev = true
     BunBundle.flags({prod: false})

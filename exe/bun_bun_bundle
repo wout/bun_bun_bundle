@@ -12,23 +12,23 @@ case command
 when 'dev', 'watch'
   exec('bun', 'run', bake, '--dev', *flags)
 when 'build'
-  exec('bun', 'run', bake, '--prod', *flags)
+  exec('bun', 'run', bake, *flags)
 else
   puts <<~USAGE
     Usage: bun_bun_bundle <command> [flags]
 
     Commands:
       dev     Start development server with live reload and CSS hot-reloading
-      build   Build assets for production (with fingerprinting)
+      build   Build assets
 
     Flags:
-      --prod  Enable fingerprinting and minification
-      --dev   Enable source maps and watch mode
+      --prod   Enable minification and fingerprinting
+      --debug  Enable verbose WebSocket logging
 
     Examples:
-      bun_bun_bundle dev          # development with live reload
-      bun_bun_bundle dev --prod   # development with production build
-      bun_bun_bundle build        # production build
+      bun_bun_bundle dev              # development with live reload
+      bun_bun_bundle build            # build assets
+      bun_bun_bundle build --prod     # build with fingerprinting and minification
 
     Configuration:
       Place a config/bun.json in your project root to customize settings.
