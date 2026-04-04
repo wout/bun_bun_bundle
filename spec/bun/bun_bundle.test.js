@@ -113,6 +113,18 @@ describe('loadConfig', () => {
     expect(BunBundle.config.entryPoints.js).toEqual(['app/assets/js/app.js'])
   })
 
+  test('merges listenHost into devServer config', () => {
+    createFile(
+      'config/bun.json',
+      JSON.stringify({devServer: {listenHost: '0.0.0.0'}})
+    )
+
+    BunBundle.loadConfig()
+
+    expect(BunBundle.config.devServer.listenHost).toBe('0.0.0.0')
+    expect(BunBundle.config.devServer.host).toBe('127.0.0.1')
+  })
+
   test('user can override plugins', () => {
     createFile(
       'config/bun.json',
