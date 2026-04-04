@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-04-04
+
+### Added
+
+- `--debug` flag to enable verbose WebSocket logging (connect/disconnect)
+- TypeScript and TSX support for entry points
+- `entryPoints.js` and `entryPoints.css` now accept a string or an array
+
+### Changed
+
+- `build` command no longer implies `--prod`; use `build --prod` for
+  fingerprinting and minification
+
+### Fixed
+
+- Plugin loader now uses the correct parser for `.ts` and `.tsx` files instead
+  of forcing the JavaScript parser
+
 ## [0.4.0] - 2026-04-02
 
 ### Added
