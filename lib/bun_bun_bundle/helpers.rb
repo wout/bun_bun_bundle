@@ -87,7 +87,8 @@ module BunBunBundle
     end
 
     def bun_href_with_timestamp(href)
-      return href unless BunBunBundle.development?
+      return href unless href.start_with?(BunBunBundle.config.public_path)
+      return href if href.match?(/-[0-9a-f]{8}\.css$/)
 
       "#{href}#{href.include?('?') ? '&' : '?'}bust=#{(Time.now.to_f * 1000).to_i}"
     end
