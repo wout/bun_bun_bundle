@@ -87,10 +87,14 @@ module BunBunBundle
     end
 
     def bun_href_with_timestamp(href)
-      return href unless href.start_with?(BunBunBundle.config.public_path)
+      config = BunBunBundle.config
+      return href unless href.start_with?(config.public_path)
       return href if href.match?(/-[0-9a-f]{8}\.css$/)
 
-      "#{href}#{href.include?('?') ? '&' : '?'}bust=#{(Time.now.to_f * 1000).to_i}"
+      file_path = href.sub(config.public_path, config.out_dir)
+      mtime = File.exist?(file_path) ? File.mtime(file_path).to_i : Time.now.to_i
+
+      "#{href}#{href.include?('?') ? '&' : '?'}bust=#{mtime}"
     end
   end
 end

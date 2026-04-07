@@ -67,6 +67,17 @@ class HelpersTest < Minitest::Test
     assert_includes html, 'href="/assets/css/app.css?bust='
   end
 
+  def test_bun_css_tag_cache_busts_with_file_mtime
+    FileUtils.mkdir_p('public/assets/css')
+    FileUtils.touch('public/assets/css/app.css')
+    mtime = File.mtime('public/assets/css/app.css').to_i
+    html = bun_css_tag('css/app.css')
+
+    assert_includes html, "bust=#{mtime}"
+  ensure
+    FileUtils.rm_rf('public/assets/css')
+  end
+
   def test_bun_css_tag_skips_cache_bust_with_fingerprint
     with_manifest('css/app.css' => 'css/app-5e6f7a8b.css')
     html = bun_css_tag('css/app.css')
