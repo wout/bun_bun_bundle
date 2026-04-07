@@ -62,6 +62,7 @@ class HelpersTest < Minitest::Test
   # bun_css_tag
 
   def test_bun_css_tag
+    BunBunBundle.environment = 'production'
     html = bun_css_tag('css/app.css')
 
     assert_equal '<link type="text/css" rel="stylesheet" href="/assets/css/app.css">', html
@@ -71,7 +72,21 @@ class HelpersTest < Minitest::Test
     html = bun_css_tag('css/app.css', media: 'print')
 
     assert_includes html, 'media="print"'
-    assert_includes html, 'href="/assets/css/app.css"'
+    assert_includes html, 'href="/assets/css/app.css?bust='
+  end
+
+  def test_bun_css_tag_cache_busts_in_development
+    BunBunBundle.environment = 'development'
+    html = bun_css_tag('css/app.css')
+
+    assert_includes html, 'href="/assets/css/app.css?bust='
+  end
+
+  def test_bun_css_tag_no_cache_bust_in_production
+    BunBunBundle.environment = 'production'
+    html = bun_css_tag('css/app.css')
+
+    refute_includes html, 'bust='
   end
 
   # bun_img_tag

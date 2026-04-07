@@ -44,8 +44,9 @@ module BunBunBundle
     #   # => '<link href="/assets/css/app.css" type="text/css" rel="stylesheet">'
     #
     def bun_css_tag(source, **options)
-      href = bun_asset(source)
-      attrs = { type: 'text/css', rel: 'stylesheet' }.merge(options).merge(href: href)
+      attrs = { type: 'text/css', rel: 'stylesheet' }
+              .merge(options)
+              .merge(href: bun_href_with_timestamp(bun_asset(source)))
       bun_safe(%(<link #{bun_html_attrs(attrs)}>))
     end
 
@@ -83,6 +84,12 @@ module BunBunBundle
 
     def bun_escape_attr(value)
       value.to_s.gsub('&', '&amp;').gsub('"', '&quot;').gsub('<', '&lt;').gsub('>', '&gt;')
+    end
+
+    def bun_href_with_timestamp(href)
+      return href unless BunBunBundle.development?
+
+      "#{href}#{href.include?('?') ? '&' : '?'}bust=#{(Time.now.to_f * 1000).to_i}"
     end
   end
 end
