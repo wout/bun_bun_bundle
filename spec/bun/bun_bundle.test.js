@@ -272,7 +272,11 @@ describe('buildAssets', () => {
         'app/assets/css/app.css': 'body { color: red }',
         'app/assets/css/admin.css': 'body { color: blue }'
       },
-      {entryPoints: {css: ['app/assets/css/app.css', 'app/assets/css/admin.css']}}
+      {
+        entryPoints: {
+          css: ['app/assets/css/app.css', 'app/assets/css/admin.css']
+        }
+      }
     )
 
     expect(BunBundle.manifest['css/app.css']).toBe('css/app.css')
@@ -368,7 +372,9 @@ describe('loadPlugins', () => {
     expect(
       BunBundle.plugins.find(p => p.name === 'css-transforms')
     ).toBeDefined()
-    expect(BunBundle.plugins.find(p => p.name === 'js-transforms')).toBeDefined()
+    expect(
+      BunBundle.plugins.find(p => p.name === 'js-transforms')
+    ).toBeDefined()
   })
 
   test('loads no plugins when config is empty', async () => {
@@ -427,7 +433,8 @@ describe('aliases plugin', () => {
 
   test('replaces $/ references in JS imports', async () => {
     const content = await buildJS({
-      'app/assets/js/app.js': "import utils from '$/lib/utils.js'\nconsole.log(utils)",
+      'app/assets/js/app.js':
+        "import utils from '$/lib/utils.js'\nconsole.log(utils)",
       'lib/utils.js': 'export default 42'
     })
 
@@ -457,7 +464,8 @@ describe('aliases plugin', () => {
   test('replaces $/ references in TypeScript imports', async () => {
     await setupProject(
       {
-        'app/assets/js/app.ts': "import utils from '$/lib/utils.ts'\nconsole.log(utils)",
+        'app/assets/js/app.ts':
+          "import utils from '$/lib/utils.ts'\nconsole.log(utils)",
         'lib/utils.ts': 'const val: number = 99\nexport default val'
       },
       {entryPoints: {js: ['app/assets/js/app.ts']}}
@@ -500,7 +508,7 @@ describe('aliases plugin', () => {
       'app/assets/js/app.js': [
         "const el = document.querySelector('div')",
         "const path = '/api/test'",
-        "console.log(el, path)"
+        'console.log(el, path)'
       ].join('\n')
     })
 
@@ -574,6 +582,37 @@ describe('cssGlobs plugin', () => {
 
     expect(alphaPos).toBeLessThan(middlePos)
     expect(middlePos).toBeLessThan(zebraPos)
+  })
+
+  test('excludes paths matching not clause', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css':
+        "@import './components/**/*.css' not './components/admin/**';",
+      'app/assets/css/components/button.css': '.button { color: red }',
+      'app/assets/css/components/admin/panel.css': '.panel { color: blue }',
+      'app/assets/css/components/forms/input.css': '.input { color: pink }'
+    })
+
+    expect(content).toContain('.button')
+    expect(content).toContain('.input')
+    expect(content).not.toContain('.panel')
+  })
+
+  test('supports multiple not clauses', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css': [
+        "@import './components/**/*.css'",
+        "  not './components/admin/**'",
+        "  not './components/internal/**';"
+      ].join('\n'),
+      'app/assets/css/components/button.css': '.button { color: red }',
+      'app/assets/css/components/admin/panel.css': '.admin { color: blue }',
+      'app/assets/css/components/internal/debug.css': '.debug { color: green }'
+    })
+
+    expect(content).toContain('.button')
+    expect(content).not.toContain('.admin')
+    expect(content).not.toContain('.debug')
   })
 })
 
@@ -706,6 +745,21 @@ describe('jsGlobs plugin', () => {
 
     expect(alphaPos).toBeLessThan(middlePos)
     expect(middlePos).toBeLessThan(zebraPos)
+  })
+
+  test('excludes paths matching not clause', async () => {
+    const content = await buildJSGlobs({
+      ...jsApp(
+        "import c from 'glob:./components/**/*.js not ./components/admin/**'",
+        'console.log(c)'
+      ),
+      'app/assets/js/components/modal.js': 'export default function modal() {}',
+      'app/assets/js/components/admin/nav.js':
+        'export default function adminNav() {}'
+    })
+
+    expect(content).toContain('modal')
+    expect(content).not.toContain('adminNav')
   })
 })
 
