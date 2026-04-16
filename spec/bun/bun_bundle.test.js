@@ -761,6 +761,22 @@ describe('jsGlobs plugin', () => {
     expect(content).toContain('modal')
     expect(content).not.toContain('adminNav')
   })
+
+  test('handles absolute glob paths with exclusions', async () => {
+    const absComponents = join(TEST_DIR, 'app/components')
+    const content = await buildJSGlobs({
+      ...jsApp(
+        `import c from 'glob:${absComponents}/**/*_component.js not ${absComponents}/admin/**'`,
+        'console.log(c)'
+      ),
+      'app/components/modal_component.js': 'export default function modal() {}',
+      'app/components/admin/panel_component.js':
+        'export default function panel() {}'
+    })
+
+    expect(content).toContain('modal')
+    expect(content).not.toContain('panel')
+  })
 })
 
 describe('plugin pipeline', () => {
