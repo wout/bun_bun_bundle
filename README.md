@@ -139,13 +139,11 @@ BunBunBundle.asset_host = 'https://cdn.example.com'
 All helpers are prefixed with `bun_` to avoid conflicts with existing framework
 helpers:
 
-| Helper                           | Description                                      |
-| -------------------------------- | ------------------------------------------------ |
-| `bun_asset('images/logo.png')`   | Returns the fingerprinted asset path             |
-| `bun_js_tag('js/app.js')`        | Generates a `<script>` tag                       |
-| `bun_css_tag('css/app.css')`     | Generates a `<link>` tag                         |
-| `bun_img_tag('images/logo.png')` | Generates an `<img>` tag                         |
-| `bun_reload_tag`                 | Live reload script (only renders in development) |
+- `bun_asset('images/logo.png')`: returns the fingerprinted asset path
+- `bun_js_tag('js/app.js')`: generates a `<script>` tag
+- `bun_css_tag('css/app.css')`: generates a `<link>` tag
+- `bun_img_tag('images/logo.png')`: generates an `<img>` tag
+- `bun_reload_tag`: live reload script (only renders in development)
 
 All tag helpers accept additional HTML attributes:
 
@@ -269,6 +267,13 @@ every file, you can import an entire directory at once:
 This will be expanded into individual `@import` lines for each matching file,
 sorted alphabetically. A warning is logged if the pattern matches no files.
 
+To exclude specific paths, add one or more `not` clauses:
+
+```css
+@import './components/**/*.css' not './components/admin/**' not
+  './components/internal/**';
+```
+
 > [!WARNING]
 > Always include the file extension in glob patterns (e.g., `**/*.css` instead
 > of `**/*`). Without it, editor temp files like Vim's `~` backups will be
@@ -283,7 +288,13 @@ exports. Use the special `glob:` prefix in an import statement:
 import components from 'glob:./components/**/*.js'
 ```
 
-This will generate individual imports and builds an object mapping. For
+To exclude specific paths, add `not` clauses inside the string:
+
+```javascript
+import components from 'glob:./components/**/*.js not ./components/admin/**'
+```
+
+This will generate individual imports and build an object mapping. For
 example:
 
 ```javascript
@@ -306,13 +317,11 @@ returns determines the plugin type.
 
 The context object has the following properties:
 
-| Property   | Description                                  |
-| ---------- | -------------------------------------------- |
-| `root`     | Absolute path to the project root            |
-| `config`   | The resolved `bun.json` configuration object |
-| `dev`      | `true` when running in development mode      |
-| `prod`     | `true` when running in production mode       |
-| `manifest` | The current asset manifest object            |
+- `root`: absolute path to the project root
+- `config`: the resolved `bun.json` configuration object
+- `dev`: `true` when running in development mode
+- `prod`: `true` when running in production mode
+- `manifest`: the current asset manifest object
 
 #### Simple transform plugins
 
@@ -379,6 +388,12 @@ Reference custom plugins by their file path in your config:
 > The order of the plugins matters here. For example, the aliases plugin needs
 > to resolve the paths first before the glob plugin can do its work. Keep that
 > in mind for your own plugins too.
+
+### Community plugins
+
+A collection of ready-made plugins is available at
+[bun_bun_bundle-plugins](https://codeberg.org/fluck/bun_bun_bundle-plugins),
+including design token generation and build notifications.
 
 ## Project structure
 
