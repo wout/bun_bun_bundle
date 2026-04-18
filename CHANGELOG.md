@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-04-17
+
+### Added
+
+- `--fingerprint` and `--minify` flags split the behavior previously bundled
+  into `--prod`, giving finer control over a build
+- `--sourcemap[=KIND]` flag with values `inline`, `linked`, `external`, or
+  `none`. Defaults to `inline` in `dev` and `linked` for builds so production
+  stack traces stay debuggable. Invalid values are ignored with a warning
+- With `linked` or `external` sourcemaps, a `.js.map` file is written next to
+  each JS bundle. When fingerprinting is on, the map is renamed to match
+  (e.g. `app-a1b2c3d4.js.map`) and the `sourceMappingURL` comment inside the
+  JS is rewritten accordingly
+- Plugin context now exposes `minify`, `fingerprint`, and `sourcemap` alongside
+  the existing `prod` flag. Use `minify` for content-level decisions such as
+  stripping banners or debug output
+- Live reload now preserves the window scroll position across full page
+  reloads, keyed by `location.pathname`. The position is stashed in
+  `sessionStorage` before reloading and restored on the next `load` event
+
+### Changed
+
+- `--prod` is now a shortcut for `--fingerprint --minify`. Sourcemaps are no
+  longer dropped in production by default (previously `'none'`, now `'linked'`)
+- `BunBundle.flags()` now accepts either an options object (as before) or the
+  raw `process.argv` array. The CLI entry (`bake.js`) uses the argv form
+- The `BunBundle.fingerprint()` method was renamed to
+  `BunBundle.fingerprintName()` to free the `fingerprint` property name for
+  the new flag
+
 ## [0.9.1] - 2026-04-16
 
 ### Fixed
