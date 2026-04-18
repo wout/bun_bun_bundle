@@ -174,12 +174,29 @@ bun_bun_bundle dev
 # Build assets
 bun_bun_bundle build
 
-# Build with fingerprinting and minification
+# Build with fingerprinting and minification (shortcut)
 bun_bun_bundle build --prod
+
+# Fingerprint without minifying (e.g. for staging diagnostics)
+bun_bun_bundle build --fingerprint
+
+# Strip sourcemaps from a prod build
+bun_bun_bundle build --prod --sourcemap=none
 
 # Development with verbose WebSocket logging
 bun_bun_bundle dev --debug
 ```
+
+### Flags
+
+- `--prod`: shortcut for `--fingerprint --minify`
+- `--fingerprint`: hash asset filenames for cache busting
+- `--minify`: minify JS and CSS output
+- `--sourcemap[=KIND]`: `inline`, `linked`, `external`, or `none`. Defaults
+  to `inline` in `dev` and `linked` for builds, so production stack traces
+  and browser devtools stay debuggable. Pass `--sourcemap=none` when you
+  explicitly do not want maps shipped.
+- `--debug`: verbose WebSocket logging
 
 > [!NOTE]
 > When running from a Procfile (e.g. with Overmind or Foreman), use
@@ -320,7 +337,11 @@ The context object has the following properties:
 - `root`: absolute path to the project root
 - `config`: the resolved `bun.json` configuration object
 - `dev`: `true` when running in development mode
-- `prod`: `true` when running in production mode
+- `prod`: `true` when `--prod` was passed (shortcut flag)
+- `fingerprint`: `true` when asset filenames will be content-hashed
+- `minify`: `true` when output will be minified (use this to strip
+  comments, banners, or dev-only branches in your plugin)
+- `sourcemap`: the sourcemap kind being produced (or `null` for default)
 - `manifest`: the current asset manifest object
 
 #### Simple transform plugins
@@ -337,9 +358,9 @@ transform receives the output of the previous one.
 ```javascript
 // config/bun/banner.js
 
-export default function banner({prod}) {
+export default function banner({minify}) {
   return (content, args) => {
-    const stamp = prod ? '' : ` (dev ${args.path})`
+    const stamp = minify ? '' : ` (dev ${args.path})`
     return `/* My App${stamp} */\n${content}`
   }
 }
