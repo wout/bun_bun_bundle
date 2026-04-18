@@ -1,6 +1,6 @@
 import {describe, test, expect, beforeEach, afterAll} from 'bun:test'
 import {mkdirSync, writeFileSync, rmSync, existsSync, readFileSync} from 'fs'
-import {join} from 'path'
+import {join, basename} from 'path'
 import BunBundle from '../../lib/bun/bun_bundle.js'
 
 const TEST_DIR = join(process.cwd(), '.test-tmp')
@@ -14,6 +14,9 @@ beforeEach(() => {
   BunBundle.debug = false
   BunBundle.prod = false
   BunBundle.dev = false
+  BunBundle.fingerprint = false
+  BunBundle.minify = false
+  BunBundle.sourcemap = null
   BunBundle.root = TEST_DIR
 })
 
@@ -57,9 +60,6 @@ describe('flags', () => {
     BunBundle.flags({dev: true})
     expect(BunBundle.dev).toBe(true)
 
-    BunBundle.flags({prod: true})
-    expect(BunBundle.prod).toBe(true)
-
     BunBundle.flags({debug: true})
     expect(BunBundle.debug).toBe(true)
 
@@ -67,6 +67,50 @@ describe('flags', () => {
     BunBundle.flags({prod: false})
     expect(BunBundle.dev).toBe(true)
     expect(BunBundle.prod).toBe(false)
+  })
+
+  test('--prod implies --fingerprint and --minify', () => {
+    BunBundle.flags({prod: true})
+    expect(BunBundle.prod).toBe(true)
+    expect(BunBundle.fingerprint).toBe(true)
+    expect(BunBundle.minify).toBe(true)
+  })
+
+  test('explicit fingerprint/minify override prod implication', () => {
+    BunBundle.flags({prod: true, minify: false})
+    expect(BunBundle.prod).toBe(true)
+    expect(BunBundle.fingerprint).toBe(true)
+    expect(BunBundle.minify).toBe(false)
+  })
+
+  test('fingerprint and minify can be set without prod', () => {
+    BunBundle.flags({fingerprint: true})
+    expect(BunBundle.prod).toBe(false)
+    expect(BunBundle.fingerprint).toBe(true)
+    expect(BunBundle.minify).toBe(false)
+  })
+
+  test('sourcemap accepts a string value', () => {
+    BunBundle.flags({sourcemap: 'external'})
+    expect(BunBundle.sourcemap).toBe('external')
+  })
+
+  test('parses argv arrays', () => {
+    BunBundle.flags(['--prod', '--sourcemap=none'])
+    expect(BunBundle.prod).toBe(true)
+    expect(BunBundle.fingerprint).toBe(true)
+    expect(BunBundle.minify).toBe(true)
+    expect(BunBundle.sourcemap).toBe('none')
+  })
+
+  test('bare --sourcemap defaults to linked', () => {
+    BunBundle.flags(['--sourcemap'])
+    expect(BunBundle.sourcemap).toBe('linked')
+  })
+
+  test('ignores invalid --sourcemap value', () => {
+    BunBundle.flags(['--sourcemap=bogus'])
+    expect(BunBundle.sourcemap).toBe(null)
   })
 })
 
@@ -151,17 +195,17 @@ describe('loadConfig', () => {
   })
 })
 
-describe('fingerprint', () => {
-  test('returns plain filename in dev mode', () => {
-    expect(BunBundle.fingerprint('app', '.js', 'content')).toBe('app.js')
+describe('fingerprintName', () => {
+  test('returns plain filename when fingerprint is off', () => {
+    expect(BunBundle.fingerprintName('app', '.js', 'content')).toBe('app.js')
   })
 
-  test('returns consistent, content-dependent hashes in prod mode', () => {
-    BunBundle.prod = true
-    const hash = BunBundle.fingerprint('app', '.js', 'content')
+  test('returns consistent, content-dependent hashes when enabled', () => {
+    BunBundle.fingerprint = true
+    const hash = BunBundle.fingerprintName('app', '.js', 'content')
     expect(hash).toMatch(/^app-[a-f0-9]{8}\.js$/)
-    expect(BunBundle.fingerprint('app', '.js', 'content')).toBe(hash)
-    expect(BunBundle.fingerprint('app', '.js', 'different')).not.toBe(hash)
+    expect(BunBundle.fingerprintName('app', '.js', 'content')).toBe(hash)
+    expect(BunBundle.fingerprintName('app', '.js', 'different')).not.toBe(hash)
   })
 })
 
@@ -199,12 +243,48 @@ describe('buildAssets', () => {
     expect(existsSync(join(TEST_DIR, 'public/assets/css/app.css'))).toBe(true)
   })
 
-  test('fingerprints in prod mode', async () => {
-    BunBundle.prod = true
+  test('fingerprints when fingerprint is enabled', async () => {
+    BunBundle.fingerprint = true
     await setupProject({'app/assets/js/app.js': 'console.log("prod")'})
     await BunBundle.buildJS()
 
     expect(BunBundle.manifest['js/app.js']).toMatch(/^js\/app-[a-f0-9]{8}\.js$/)
+  })
+
+  test('writes linked sourcemap alongside JS', async () => {
+    BunBundle.sourcemap = 'linked'
+    await setupProject({'app/assets/js/app.js': 'console.log("maps")'})
+    await BunBundle.buildJS()
+
+    const js = readOutput('js/app.js')
+    expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js.map'))).toBe(true)
+    expect(js).toContain('//# sourceMappingURL=app.js.map')
+  })
+
+  test('renames sourcemap and rewrites URL when fingerprinting', async () => {
+    BunBundle.fingerprint = true
+    BunBundle.sourcemap = 'linked'
+    await setupProject({'app/assets/js/app.js': 'console.log("both")'})
+    await BunBundle.buildJS()
+
+    const fingerprinted = BunBundle.manifest['js/app.js']
+    const jsPath = join(TEST_DIR, 'public/assets', fingerprinted)
+    const mapPath = `${jsPath}.map`
+    expect(existsSync(jsPath)).toBe(true)
+    expect(existsSync(mapPath)).toBe(true)
+
+    const js = readFileSync(jsPath, 'utf-8')
+    const mapName = basename(mapPath)
+    expect(js).toContain(`//# sourceMappingURL=${mapName}`)
+    expect(js).not.toContain('//# sourceMappingURL=app.js.map')
+  })
+
+  test('omits sourcemap file when set to none', async () => {
+    BunBundle.sourcemap = 'none'
+    await setupProject({'app/assets/js/app.js': 'console.log("bare")'})
+    await BunBundle.buildJS()
+
+    expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js.map'))).toBe(false)
   })
 
   test('warns on missing entry point and continues', async () => {
@@ -308,8 +388,8 @@ describe('copyStaticAssets', () => {
     ).toBe(true)
   })
 
-  test('fingerprints static assets in prod mode', async () => {
-    BunBundle.prod = true
+  test('fingerprints static assets when fingerprint is enabled', async () => {
+    BunBundle.fingerprint = true
     await copyAssets({'app/assets/images/logo.png': 'fake-image-data'})
 
     expect(BunBundle.manifest['images/logo.png']).toMatch(

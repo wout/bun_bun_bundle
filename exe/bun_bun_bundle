@@ -22,13 +22,19 @@ else
       build   Build assets
 
     Flags:
-      --prod   Enable minification and fingerprinting
-      --debug  Enable verbose WebSocket logging
+      --prod              Shortcut for --fingerprint --minify
+      --fingerprint       Hash asset filenames for cache busting
+      --minify            Minify JS and CSS output
+      --sourcemap[=KIND]  Sourcemap kind: inline, linked, external, none
+                          (dev defaults to inline, builds default to linked)
+      --debug             Enable verbose WebSocket logging
 
     Examples:
-      bun_bun_bundle dev              # development with live reload
-      bun_bun_bundle build            # build assets
-      bun_bun_bundle build --prod     # build with fingerprinting and minification
+      bun_bun_bundle dev                            # live reload
+      bun_bun_bundle build                          # plain build
+      bun_bun_bundle build --prod                   # fingerprint + minify
+      bun_bun_bundle build --fingerprint            # fingerprint only
+      bun_bun_bundle build --prod --sourcemap=none  # strip sourcemaps
 
     Configuration:
       Place a config/bun.json in your project root to customize settings.
