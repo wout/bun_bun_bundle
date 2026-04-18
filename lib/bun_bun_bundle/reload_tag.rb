@@ -33,6 +33,19 @@ module BunBunBundle
           const ws = new WebSocket('#{config.dev_server.ws_url}')
           let connected = false
 
+          const scrollKey = 'bun-scroll:' + location.pathname
+          addEventListener('load', () => {
+            const saved = sessionStorage.getItem(scrollKey)
+            if (saved !== null) {
+              sessionStorage.removeItem(scrollKey)
+              scrollTo(0, parseInt(saved, 10))
+            }
+          })
+          const reload = () => {
+            sessionStorage.setItem(scrollKey, String(scrollY))
+            location.reload()
+          }
+
           ws.onmessage = (event) => {
             const data = JSON.parse(event.data)
 
@@ -50,7 +63,7 @@ module BunBunBundle
               console.error('\\u2716 Build error:', data.message)
             } else {
               console.log('\\u25b8 Reloading...')
-              location.reload()
+              reload()
             }
           }
 
@@ -59,7 +72,7 @@ module BunBunBundle
             console.log('\\u25b8 Live reload connected')
           }
           ws.onclose = () => {
-            if (connected) setTimeout(() => location.reload(), 2000)
+            if (connected) setTimeout(reload, 2000)
           }
         })()
         </script>

@@ -61,6 +61,16 @@ class ReloadTagTest < Minitest::Test
     assert_includes html, 'location.reload()'
   end
 
+  def test_preserves_scroll_position_across_full_reload
+    BunBunBundle.environment = 'development'
+    html = bun_reload_tag
+
+    assert_includes html, "'bun-scroll:' + location.pathname"
+    assert_includes html, 'sessionStorage.setItem(scrollKey'
+    assert_includes html, 'sessionStorage.getItem(scrollKey)'
+    assert_includes html, 'scrollTo(0, parseInt(saved, 10))'
+  end
+
   def test_uses_secure_websocket_when_configured
     BunBunBundle.environment = 'development'
     with_config('devServer' => { 'secure' => true })
