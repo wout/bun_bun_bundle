@@ -284,7 +284,9 @@ describe('buildAssets', () => {
     await setupProject({'app/assets/js/app.js': 'console.log("bare")'})
     await BunBundle.buildJS()
 
-    expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js.map'))).toBe(false)
+    expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js.map'))).toBe(
+      false
+    )
   })
 
   test('warns on missing entry point and continues', async () => {
@@ -569,7 +571,9 @@ describe('aliases plugin', () => {
   test('resolves $/ inside prefixed strings like glob:$/', async () => {
     const aliases = (await import('../../lib/bun/plugins/aliases.js')).default
     const transform = aliases({root: '/root'})
-    const result = transform("import c from 'glob:$/lib/components/*.js'")
+    const result = transform("import c from 'glob:$/lib/components/*.js'", {
+      path: 'app.js'
+    })
 
     expect(result).toBe("import c from 'glob:/root/lib/components/*.js'")
   })
@@ -578,7 +582,7 @@ describe('aliases plugin', () => {
     const aliases = (await import('../../lib/bun/plugins/aliases.js')).default
     const transform = aliases({root: '/root'})
     const input = "s.replace(/.*components\\//, '').replace(/_component$/, '')"
-    const result = transform(input)
+    const result = transform(input, {path: 'app.js'})
 
     expect(result).toBe(input)
   })
