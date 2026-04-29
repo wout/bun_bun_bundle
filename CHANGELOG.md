@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.1] - 2026-04-29
+
+### Fixed
+
+- `aliases` plugin now resolves `$/` references inside CSS `not '...'` exclusion
+  clauses. Previously only the main pattern was rewritten, so a glob like
+  `@import '$/app/components/**/*.css' not '$/app/components/admin/**'` left
+  the exclusion as a literal `$/...` string and matched nothing, allowing the
+  excluded files to be bundled
+
 ## [0.10.0] - 2026-04-17
 
 ### Added
