@@ -534,6 +534,19 @@ describe('aliases plugin', () => {
     expect(content).toContain('margin')
   })
 
+  test('replaces $/ references in CSS @import not clauses', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css':
+        "@import '$/app/components/**/*.css' not '$/app/components/admin/**';",
+      'app/components/button.css': '.button { color: red }',
+      'app/components/admin/panel.css': '.panel { color: blue }'
+    })
+
+    expect(content).not.toContain('$/')
+    expect(content).toContain('.button')
+    expect(content).not.toContain('.panel')
+  })
+
   test('leaves non-alias urls untouched', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css':
