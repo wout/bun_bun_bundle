@@ -17,6 +17,7 @@ beforeEach(() => {
   BunBundle.fingerprint = false
   BunBundle.minify = false
   BunBundle.sourcemap = null
+  BunBundle.sri = []
   BunBundle.root = TEST_DIR
 })
 
@@ -111,6 +112,32 @@ describe('flags', () => {
   test('ignores invalid --sourcemap value', () => {
     BunBundle.flags(['--sourcemap=bogus'])
     expect(BunBundle.sourcemap).toBe(null)
+  })
+
+  test('--sri accepts a comma-separated list of algorithms', () => {
+    BunBundle.flags(['--sri=sha256,sha384'])
+    expect(BunBundle.sri).toEqual(['sha256', 'sha384'])
+  })
+
+  test('bare --sri defaults to sha384', () => {
+    BunBundle.flags(['--sri'])
+    expect(BunBundle.sri).toEqual(['sha384'])
+  })
+
+  test('--sri ignores unknown algorithms', () => {
+    BunBundle.flags(['--sri=md5,sha384'])
+    expect(BunBundle.sri).toEqual(['sha384'])
+  })
+
+  test('--sri= with an empty value leaves SRI disabled', () => {
+    BunBundle.sri = []
+    BunBundle.flags(['--sri='])
+    expect(BunBundle.sri).toEqual([])
+  })
+
+  test('--prod does NOT auto-enable SRI', () => {
+    BunBundle.flags(['--prod'])
+    expect(BunBundle.sri).toEqual([])
   })
 })
 
@@ -232,14 +259,14 @@ describe('buildAssets', () => {
   test('builds JS files', async () => {
     await buildJS({'app/assets/js/app.js': 'console.log("test")'})
 
-    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
+    expect(BunBundle.manifest['js/app.js']).toEqual({url: 'js/app.js'})
     expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js'))).toBe(true)
   })
 
   test('builds CSS files', async () => {
     await buildCSS({'app/assets/css/app.css': 'body { color: pink }'})
 
-    expect(BunBundle.manifest['css/app.css']).toBe('css/app.css')
+    expect(BunBundle.manifest['css/app.css']).toEqual({url: 'css/app.css'})
     expect(existsSync(join(TEST_DIR, 'public/assets/css/app.css'))).toBe(true)
   })
 
@@ -248,7 +275,9 @@ describe('buildAssets', () => {
     await setupProject({'app/assets/js/app.js': 'console.log("prod")'})
     await BunBundle.buildJS()
 
-    expect(BunBundle.manifest['js/app.js']).toMatch(/^js\/app-[a-f0-9]{8}\.js$/)
+    expect(BunBundle.manifest['js/app.js'].url).toMatch(
+      /^js\/app-[a-f0-9]{8}\.js$/
+    )
   })
 
   test('writes linked sourcemap alongside JS', async () => {
@@ -267,7 +296,7 @@ describe('buildAssets', () => {
     await setupProject({'app/assets/js/app.js': 'console.log("both")'})
     await BunBundle.buildJS()
 
-    const fingerprinted = BunBundle.manifest['js/app.js']
+    const fingerprinted = BunBundle.manifest['js/app.js'].url
     const jsPath = join(TEST_DIR, 'public/assets', fingerprinted)
     const mapPath = `${jsPath}.map`
     expect(existsSync(jsPath)).toBe(true)
@@ -304,7 +333,7 @@ describe('buildAssets', () => {
     )
     await BunBundle.buildJS()
 
-    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
+    expect(BunBundle.manifest['js/app.js']).toEqual({url: 'js/app.js'})
   })
 
   test('builds multiple JS entry points', async () => {
@@ -316,8 +345,8 @@ describe('buildAssets', () => {
       {entryPoints: {js: ['app/assets/js/app.js', 'app/assets/js/admin.js']}}
     )
 
-    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
-    expect(BunBundle.manifest['js/admin.js']).toBe('js/admin.js')
+    expect(BunBundle.manifest['js/app.js']).toEqual({url: 'js/app.js'})
+    expect(BunBundle.manifest['js/admin.js']).toEqual({url: 'js/admin.js'})
   })
 
   test('builds TypeScript files', async () => {
@@ -327,7 +356,7 @@ describe('buildAssets', () => {
     )
     await BunBundle.buildJS()
 
-    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
+    expect(BunBundle.manifest['js/app.js']).toEqual({url: 'js/app.js'})
     expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js'))).toBe(true)
     expect(readOutput('js/app.js')).toContain('hello')
   })
@@ -344,7 +373,7 @@ describe('buildAssets', () => {
     )
     await BunBundle.buildJS()
 
-    expect(BunBundle.manifest['js/app.js']).toBe('js/app.js')
+    expect(BunBundle.manifest['js/app.js']).toEqual({url: 'js/app.js'})
     expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js'))).toBe(true)
   })
 
@@ -361,8 +390,30 @@ describe('buildAssets', () => {
       }
     )
 
-    expect(BunBundle.manifest['css/app.css']).toBe('css/app.css')
-    expect(BunBundle.manifest['css/admin.css']).toBe('css/admin.css')
+    expect(BunBundle.manifest['css/app.css']).toEqual({url: 'css/app.css'})
+    expect(BunBundle.manifest['css/admin.css']).toEqual({url: 'css/admin.css'})
+  })
+
+  test('embeds SRI digests when sri is configured', async () => {
+    BunBundle.sri = ['sha384']
+    await setupProject({'app/assets/js/app.js': 'console.log("hi")'})
+    await BunBundle.buildJS()
+
+    const entry = BunBundle.manifest['js/app.js']
+    expect(entry.url).toBe('js/app.js')
+    expect(entry.sri).toHaveLength(1)
+    expect(entry.sri[0]).toMatch(/^sha384-[A-Za-z0-9+/=]+$/)
+  })
+
+  test('embeds one SRI digest per requested algorithm', async () => {
+    BunBundle.sri = ['sha256', 'sha384']
+    await setupProject({'app/assets/css/app.css': 'body { color: red }'})
+    await BunBundle.buildCSS()
+
+    const entry = BunBundle.manifest['css/app.css']
+    expect(entry.sri).toHaveLength(2)
+    expect(entry.sri[0]).toMatch(/^sha256-/)
+    expect(entry.sri[1]).toMatch(/^sha384-/)
   })
 })
 
@@ -379,9 +430,13 @@ describe('copyStaticAssets', () => {
       'app/assets/fonts/Inter.woff2': 'fake-font-data'
     })
 
-    expect(BunBundle.manifest['images/logo.png']).toBe('images/logo.png')
+    expect(BunBundle.manifest['images/logo.png']).toEqual({
+      url: 'images/logo.png'
+    })
     expect(BunBundle.manifest['images/icons/arrow.svg']).toBeDefined()
-    expect(BunBundle.manifest['fonts/Inter.woff2']).toBe('fonts/Inter.woff2')
+    expect(BunBundle.manifest['fonts/Inter.woff2']).toEqual({
+      url: 'fonts/Inter.woff2'
+    })
     expect(existsSync(join(TEST_DIR, 'public/assets/images/logo.png'))).toBe(
       true
     )
@@ -394,9 +449,18 @@ describe('copyStaticAssets', () => {
     BunBundle.fingerprint = true
     await copyAssets({'app/assets/images/logo.png': 'fake-image-data'})
 
-    expect(BunBundle.manifest['images/logo.png']).toMatch(
+    expect(BunBundle.manifest['images/logo.png'].url).toMatch(
       /^images\/logo-[a-f0-9]{8}\.png$/
     )
+  })
+
+  test('computes SRI digests for static assets when configured', async () => {
+    BunBundle.sri = ['sha384']
+    await copyAssets({'app/assets/images/logo.png': 'fake-image-data'})
+
+    const entry = BunBundle.manifest['images/logo.png']
+    expect(entry.sri).toHaveLength(1)
+    expect(entry.sri[0]).toMatch(/^sha384-[A-Za-z0-9+/=]+$/)
   })
 
   test('skips missing static directories', async () => {
@@ -418,16 +482,42 @@ describe('cleanOutDir', () => {
 })
 
 describe('writeManifest', () => {
-  test('writes manifest JSON', async () => {
+  test('writes manifest JSON with object entries', async () => {
     await setupProject()
-    BunBundle.manifest = {'js/app.js': 'js/app-abc123.js'}
+    BunBundle.manifest = {'js/app.js': {url: 'js/app-abc123.js'}}
     await BunBundle.writeManifest()
     const content = readFileSync(
       join(TEST_DIR, BunBundle.config.manifestPath),
       'utf-8'
     )
 
-    expect(JSON.parse(content)).toEqual({'js/app.js': 'js/app-abc123.js'})
+    expect(JSON.parse(content)).toEqual({
+      'js/app.js': {url: 'js/app-abc123.js'}
+    })
+  })
+
+  test('preserves SRI digests in the manifest', async () => {
+    await setupProject()
+    BunBundle.manifest = {
+      'js/app.js': {url: 'js/app-abc123.js', sri: ['sha384-xyz']}
+    }
+    await BunBundle.writeManifest()
+    const data = JSON.parse(
+      readFileSync(join(TEST_DIR, BunBundle.config.manifestPath), 'utf-8')
+    )
+
+    expect(data['js/app.js'].sri).toEqual(['sha384-xyz'])
+  })
+
+  test('does not write a $schema key', async () => {
+    await setupProject()
+    BunBundle.manifest = {'js/app.js': {url: 'js/app-abc123.js'}}
+    await BunBundle.writeManifest()
+    const data = JSON.parse(
+      readFileSync(join(TEST_DIR, BunBundle.config.manifestPath), 'utf-8')
+    )
+
+    expect(data.$schema).toBeUndefined()
   })
 })
 
@@ -923,6 +1013,29 @@ describe('full build', () => {
     expect(existsSync(join(TEST_DIR, BunBundle.config.manifestPath))).toBe(true)
   })
 
+  test('persists object-shape entries with sri when configured', async () => {
+    BunBundle.sri = ['sha384']
+    await setupProject({
+      'app/assets/js/app.js': 'console.log("on disk")',
+      'app/assets/css/app.css': 'body { color: red }',
+      'app/assets/images/logo.png': 'fake-image'
+    })
+    BunBundle.cleanOutDir()
+    await BunBundle.copyStaticAssets()
+    await BunBundle.buildJS()
+    await BunBundle.buildCSS()
+    await BunBundle.writeManifest()
+
+    const data = JSON.parse(
+      readFileSync(join(TEST_DIR, BunBundle.config.manifestPath), 'utf-8')
+    )
+    expect(data.$schema).toBeUndefined()
+    expect(data['js/app.js'].url).toBe('js/app.js')
+    expect(data['js/app.js'].sri[0]).toMatch(/^sha384-/)
+    expect(data['css/app.css'].sri[0]).toMatch(/^sha384-/)
+    expect(data['images/logo.png'].url).toBe('images/logo.png')
+  })
+
   test('clean build removes previous output', async () => {
     createFile('public/assets/js/stale.js', 'old stuff')
     await setupProject({'app/assets/js/app.js': 'console.log("fresh")'})
@@ -937,8 +1050,8 @@ describe('full build', () => {
 describe('prettyManifest', () => {
   test('formats manifest entries and handles empty manifest', () => {
     BunBundle.manifest = {
-      'js/app.js': 'js/app-abc123.js',
-      'css/app.css': 'css/app-def456.css'
+      'js/app.js': {url: 'js/app-abc123.js'},
+      'css/app.css': {url: 'css/app-def456.css'}
     }
     const output = BunBundle.prettyManifest()
     expect(output).toContain('js/app.js → js/app-abc123.js')
