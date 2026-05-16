@@ -1,5 +1,14 @@
 import {describe, test, expect, beforeEach, afterAll} from 'bun:test'
-import {mkdirSync, writeFileSync, rmSync, existsSync, readFileSync} from 'fs'
+import {
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+  openSync,
+  closeSync,
+  fsyncSync
+} from 'fs'
 import {join, basename} from 'path'
 import BunBundle from '../../lib/bun/bun_bundle.js'
 
@@ -29,6 +38,14 @@ function createFile(relativePath, content = '') {
   const fullPath = join(TEST_DIR, relativePath)
   mkdirSync(join(fullPath, '..'), {recursive: true})
   writeFileSync(fullPath, content)
+  // Force the file data to disk so Bun.build can read it on container
+  // filesystems where dir entries land before file contents do.
+  const fd = openSync(fullPath, 'r')
+  try {
+    fsyncSync(fd)
+  } finally {
+    closeSync(fd)
+  }
   return fullPath
 }
 
