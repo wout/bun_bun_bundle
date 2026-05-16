@@ -183,6 +183,9 @@ bun_bun_bundle build --fingerprint
 # Strip sourcemaps from a prod build
 bun_bun_bundle build --prod --sourcemap=none
 
+# Production build with Subresource Integrity digests
+bun_bun_bundle build --prod --sri=sha384
+
 # Development with verbose WebSocket logging
 bun_bun_bundle dev --debug
 ```
@@ -196,7 +199,15 @@ bun_bun_bundle dev --debug
   to `inline` in `dev` and `linked` for builds, so production stack traces
   and browser devtools stay debuggable. Pass `--sourcemap=none` when you
   explicitly do not want maps shipped.
+- `--sri[=ALGOS]`: compute [Subresource Integrity][sri] digests for each
+  asset. Pass a comma-separated list of `sha256`, `sha384`, or `sha512`
+  (bare `--sri` defaults to `sha384`). When digests are present, the
+  `bun_js_tag` and `bun_css_tag` helpers automatically render
+  `integrity="..." crossorigin="anonymous"` so browsers verify the response
+  before executing it
 - `--debug`: verbose WebSocket logging
+
+[sri]: https://developer.mozilla.org/docs/Web/Security/Subresource_Integrity
 
 > [!NOTE]
 > When running from a Procfile (e.g. with Overmind or Foreman), use
