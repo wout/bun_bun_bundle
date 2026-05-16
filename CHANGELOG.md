@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-05-16
+
+### Added
+
+- `--sri[=ALGOS]` flag that computes Subresource Integrity digests for each
+  compiled asset. Pass a comma-separated list of `sha256`, `sha384`, or `sha512`
+  (bare `--sri` defaults to `sha384`). Digests are written to the manifest under
+  each entry's `sri` key
+- `bun_js_tag` and `bun_css_tag` now render `integrity="..."` and
+  `crossorigin="anonymous"` automatically when the manifest entry carries `sri`
+  digests. User-passed `crossorigin:` or `integrity:` options win
+
+### Changed
+
+- **Breaking:** manifest schema bumped from `{ "js/app.js": "js/app-abc.js" }`
+  to `{ "js/app.js": { "url": "js/app-abc.js", "sri": [...] } }`. Anything
+  reading `public/bun-manifest.json` directly needs to update to read
+  `entry["url"]`. Rebuild your assets after upgrading: a clear `MigrationError`
+  is raised when an old-shape manifest is loaded. The `url` key matches the
+  [hanami-assets manifest contract][has]
+- `BunBunBundle::Manifest#[]` now returns a `BunBunBundle::Manifest::Entry`
+  struct (`#url`, `#sri`) instead of a bare string. A new `InvalidEntryError` is
+  raised when an entry is missing its `url` field
+
+[has]: https://github.com/hanami/assets
+
 ## [0.12.1] - 2026-04-29
 
 ### Fixed
