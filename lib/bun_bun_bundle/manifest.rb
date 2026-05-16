@@ -5,11 +5,30 @@ require 'json'
 module BunBunBundle
   class Manifest
     class MissingAssetError < StandardError; end
+    class MigrationError < StandardError; end
+    class InvalidEntryError < StandardError; end
+
+    Entry = Data.define(:url, :sri) do
+      def self.from(value)
+        value.is_a?(Hash) || raise(
+          MigrationError,
+          'Manifest predates bun_bun_bundle 0.13. Run: bun_bun_bundle build',
+        )
+
+        if (url = value['url']).nil? || url.empty?
+          raise InvalidEntryError, "Manifest entry is missing 'url'"
+        end
+
+        new(url: url, sri: Array(value['sri']).freeze)
+      end
+    end
 
     attr_reader :entries
 
     def initialize(entries = {})
-      @entries = entries.freeze
+      @entries = entries.transform_values do |value|
+        value.is_a?(Entry) ? value : Entry.from(value)
+      end.freeze
     end
 
     # Loads the manifest from a JSON file.

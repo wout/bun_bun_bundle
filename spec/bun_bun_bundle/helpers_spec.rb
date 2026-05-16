@@ -181,4 +181,75 @@ class HelpersTest < Minitest::Test
     assert_includes html, 'async'
     refute_includes html, 'async="'
   end
+
+  # subresource integrity
+
+  def test_bun_js_tag_renders_integrity_and_crossorigin_with_sri
+    with_manifest(
+      'js/app.js' => { 'url' => 'js/app-abc12345.js', 'sri' => ['sha384-xyz'] },
+    )
+    html = bun_js_tag('js/app.js')
+
+    assert_includes html, 'integrity="sha384-xyz"'
+    assert_includes html, 'crossorigin="anonymous"'
+  end
+
+  def test_bun_css_tag_renders_integrity_and_crossorigin_with_sri
+    with_manifest(
+      'css/app.css' => { 'url' => 'css/app-abc12345.css', 'sri' => ['sha384-xyz'] },
+    )
+    html = bun_css_tag('css/app.css')
+
+    assert_includes html, 'integrity="sha384-xyz"'
+    assert_includes html, 'crossorigin="anonymous"'
+  end
+
+  def test_bun_js_tag_joins_multiple_sri_algorithms
+    with_manifest(
+      'js/app.js' => {
+        'url' => 'js/app-abc12345.js',
+        'sri' => %w[sha256-aaa sha384-bbb],
+      },
+    )
+    html = bun_js_tag('js/app.js')
+
+    assert_includes html, 'integrity="sha256-aaa sha384-bbb"'
+  end
+
+  def test_bun_js_tag_omits_integrity_without_sri
+    html = bun_js_tag('js/app.js')
+
+    refute_includes html, 'integrity='
+    refute_includes html, 'crossorigin='
+  end
+
+  def test_user_options_override_auto_crossorigin
+    with_manifest(
+      'js/app.js' => { 'url' => 'js/app-abc12345.js', 'sri' => ['sha384-xyz'] },
+    )
+    html = bun_js_tag('js/app.js', crossorigin: 'use-credentials')
+
+    assert_includes html, 'crossorigin="use-credentials"'
+    refute_includes html, 'crossorigin="anonymous"'
+  end
+
+  def test_passing_crossorigin_nil_drops_the_attribute
+    with_manifest(
+      'js/app.js' => { 'url' => 'js/app-abc12345.js', 'sri' => ['sha384-xyz'] },
+    )
+    html = bun_js_tag('js/app.js', crossorigin: nil)
+
+    assert_includes html, 'integrity="sha384-xyz"'
+    refute_includes html, 'crossorigin'
+  end
+
+  def test_bun_img_tag_does_not_render_integrity_even_with_sri
+    with_manifest(
+      'images/logo.png' => { 'url' => 'images/logo-abc.png', 'sri' => ['sha384-xyz'] },
+    )
+    html = bun_img_tag('images/logo.png')
+
+    refute_includes html, 'integrity'
+    refute_includes html, 'crossorigin'
+  end
 end

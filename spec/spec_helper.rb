@@ -19,15 +19,18 @@ module TestHelpers
 
   def load_fixture_manifest
     BunBunBundle::Manifest.new(
-      'js/app.js' => 'js/app.js',
-      'css/app.css' => 'css/app.css',
-      'images/logo.png' => 'images/logo-abc12345.png',
-      'fonts/Inter.woff2' => 'fonts/Inter-def67890.woff2',
+      'js/app.js' => { 'url' => 'js/app.js' },
+      'css/app.css' => { 'url' => 'css/app.css' },
+      'images/logo.png' => { 'url' => 'images/logo-abc12345.png' },
+      'fonts/Inter.woff2' => { 'url' => 'fonts/Inter-def67890.woff2' },
     )
   end
 
   def with_manifest(entries = {})
-    BunBunBundle.manifest = BunBunBundle::Manifest.new(entries)
+    wrapped = entries.transform_values do |value|
+      value.is_a?(Hash) ? value : { 'url' => value }
+    end
+    BunBunBundle.manifest = BunBunBundle::Manifest.new(wrapped)
   end
 
   def with_config(data = {})
