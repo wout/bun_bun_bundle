@@ -1064,6 +1064,27 @@ describe('full build', () => {
   })
 })
 
+describe('watch', () => {
+  test('watches a literal directory path', async () => {
+    createFile('app/assets/css/app.css', '')
+    await setupProject({}, {watchDirs: ['app/assets']})
+
+    await BunBundle.watch()
+    expect(BunBundle.watchers.length).toBe(1)
+    BunBundle.shutdown()
+  })
+
+  test('expands glob patterns to matching directories', async () => {
+    createFile('slices/admin/assets/css/app.css', '')
+    createFile('slices/auth/assets/css/app.css', '')
+    await setupProject({}, {watchDirs: ['slices/*/assets']})
+
+    await BunBundle.watch()
+    expect(BunBundle.watchers.length).toBe(2)
+    BunBundle.shutdown()
+  })
+})
+
 describe('prettyManifest', () => {
   test('formats manifest entries and handles empty manifest', () => {
     BunBundle.manifest = {
