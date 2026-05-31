@@ -244,6 +244,10 @@ Place a `config/bun.json` in your project root:
 > Creating a `bun.json` file is entirely optional. All values shown above are
 > defaults, you only need to specify what you want to override.
 
+`watchDirs` entries may be glob patterns. For example, in a Hanami app with
+multiple slices, `"slices/*/assets"` will watch every slice's assets directory
+without having to list them explicitly.
+
 If you're developing inside a Docker container, set `listenHost` so the
 WebSocket server accepts connections from the host machine:
 
