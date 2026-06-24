@@ -86,4 +86,21 @@ class ReloadTagTest < Minitest::Test
 
     assert_includes html, 'ws://127.0.0.1:4000'
   end
+
+  def test_in_hanami_mode_uses_public_path_prefix_for_css_paths
+    BunBunBundle.environment = 'development'
+    with_config('manifestFormat' => 'hanami')
+    html = bun_reload_tag
+
+    assert_includes html, '"/assets/"'
+    refute_includes html, '/assets/css/app.css'
+  end
+
+  def test_in_hanami_mode_honors_custom_public_path
+    BunBunBundle.environment = 'development'
+    with_config('manifestFormat' => 'hanami', 'publicPath' => '/static')
+    html = bun_reload_tag
+
+    assert_includes html, '"/static/"'
+  end
 end

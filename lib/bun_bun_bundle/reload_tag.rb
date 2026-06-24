@@ -22,9 +22,7 @@ module BunBunBundle
       return '' unless BunBunBundle.development?
 
       config = BunBunBundle.config
-      css_paths = BunBunBundle.manifest.css_entry_points.map do |key|
-        "#{config.public_path}/#{key}"
-      end
+      css_paths = bun_css_reload_paths(config)
 
       html = <<~HTML
         <script>
@@ -78,6 +76,16 @@ module BunBunBundle
         </script>
       HTML
       bun_safe(html)
+    end
+
+    private
+
+    def bun_css_reload_paths(config)
+      return ["#{config.public_path}/"] if config.hanami?
+
+      BunBunBundle.manifest.css_entry_points.map do |key|
+        "#{config.public_path}/#{key}"
+      end
     end
   end
 end

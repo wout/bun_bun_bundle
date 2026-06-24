@@ -5,11 +5,13 @@ require 'json'
 module BunBunBundle
   class Config
     CONFIG_PATH = 'config/bun.json'
+    HANAMI_MARKER = 'config/app.rb'
 
-    attr_reader :manifest_path, :out_dir, :public_path, :static_dirs,
-                :entry_points, :dev_server
+    attr_reader :manifest_format, :manifest_path, :out_dir, :public_path,
+                :static_dirs, :entry_points, :dev_server
 
     def initialize(data = {})
+      @manifest_format = data.fetch('manifestFormat', 'standard')
       @manifest_path = data.fetch('manifestPath', 'public/bun-manifest.json')
       @out_dir = data.fetch('outDir', 'public/assets')
       @public_path = data.fetch('publicPath', '/assets')
@@ -18,10 +20,17 @@ module BunBunBundle
       @dev_server = DevServer.new(data.fetch('devServer', {}))
     end
 
+    def hanami? = manifest_format == 'hanami'
+
     def self.load(root: Dir.pwd)
       path = File.join(root, CONFIG_PATH)
       data = File.exist?(path) ? JSON.parse(File.read(path)) : {}
+      data['manifestFormat'] ||= detect_format(root)
       new(data)
+    end
+
+    def self.detect_format(root)
+      File.exist?(File.join(root, HANAMI_MARKER)) ? 'hanami' : 'standard'
     end
 
     class EntryPoints

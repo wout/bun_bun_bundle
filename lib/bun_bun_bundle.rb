@@ -41,10 +41,15 @@ module BunBunBundle
     #
     # Pass `hanami: config` from within a Hanami::App class body to
     # automatically register middleware and configure CSP for development.
+    # In Hanami mode the manifest is owned by hanami-assets, so we skip
+    # loading our own.
     def setup(root: Dir.pwd, hanami: nil)
       self.config = Config.load(root: root.to_s)
-      options = development? ? {} : { retries: 1, delay: 0 }
-      self.manifest = Manifest.load(root: root.to_s, **options)
+
+      unless config.hanami?
+        options = development? ? {} : { retries: 1, delay: 0 }
+        self.manifest = Manifest.load(root: root.to_s, **options)
+      end
 
       configure_hanami(hanami) if hanami
     end

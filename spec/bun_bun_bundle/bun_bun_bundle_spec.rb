@@ -67,4 +67,31 @@ class BunBunBundleTest < Minitest::Test
     ENV['RACK_ENV'] = original
     BunBunBundle.reset!
   end
+
+  def test_setup_skips_manifest_load_in_hanami_mode
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, 'config'))
+      File.write(File.join(dir, 'config/app.rb'), '')
+
+      BunBunBundle.setup(root: dir)
+
+      assert BunBunBundle.config.hanami?
+      assert_empty BunBunBundle.manifest.entries
+    end
+  end
+
+  def test_setup_loads_manifest_in_standard_mode
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, 'public'))
+      File.write(
+        File.join(dir, 'public/bun-manifest.json'),
+        JSON.generate('js/app.js' => { 'url' => 'js/app.js' }),
+      )
+
+      BunBunBundle.setup(root: dir)
+
+      refute BunBunBundle.config.hanami?
+      assert BunBunBundle.manifest.key?('js/app.js')
+    end
+  end
 end

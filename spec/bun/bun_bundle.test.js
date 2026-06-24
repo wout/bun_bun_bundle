@@ -1156,19 +1156,22 @@ describe('hanami mode', () => {
     )
   })
 
-  test('static assets keep subdir key and gain prefixed url', async () => {
+  test('static asset keys drop the static-dir prefix; urls keep subdir', async () => {
     await setupHanami({
       'app/assets/images/logo.png': 'fake',
+      'app/assets/images/icons/arrow.svg': '<svg/>',
       'app/assets/fonts/Inter.woff2': 'fake-font'
     })
     await BunBundle.copyStaticAssets()
 
-    expect(BunBundle.manifest['images/logo.png'].url).toBe(
-      '/assets/images/logo.png'
+    expect(BunBundle.manifest['logo.png'].url).toBe('/assets/images/logo.png')
+    expect(BunBundle.manifest['icons/arrow.svg'].url).toBe(
+      '/assets/images/icons/arrow.svg'
     )
-    expect(BunBundle.manifest['fonts/Inter.woff2'].url).toBe(
+    expect(BunBundle.manifest['Inter.woff2'].url).toBe(
       '/assets/fonts/Inter.woff2'
     )
+    expect(BunBundle.manifest['images/logo.png']).toBeUndefined()
     expect(existsSync(join(TEST_DIR, 'public/assets/images/logo.png'))).toBe(
       true
     )
@@ -1354,7 +1357,7 @@ describe('hanami slices', () => {
     await BunBundle.copyStaticAssets()
     const admin = BunBundle.targets.find(t => t.name === 'admin')
 
-    expect(admin.manifest['images/icon.png'].url).toBe(
+    expect(admin.manifest['icon.png'].url).toBe(
       '/assets/_admin/images/icon.png'
     )
     expect(

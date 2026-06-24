@@ -89,4 +89,52 @@ class ConfigTest < Minitest::Test
       assert_equal 3002, config.dev_server.port
     end
   end
+
+  def test_default_manifest_format_is_standard
+    config = BunBunBundle::Config.new
+
+    assert_equal 'standard', config.manifest_format
+    refute config.hanami?
+  end
+
+  def test_manifest_format_from_data
+    config = BunBunBundle::Config.new('manifestFormat' => 'hanami')
+
+    assert_equal 'hanami', config.manifest_format
+    assert config.hanami?
+  end
+
+  def test_load_auto_detects_hanami_when_app_rb_exists
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, 'config'))
+      File.write(File.join(dir, 'config/app.rb'), '# fake hanami app')
+
+      config = BunBunBundle::Config.load(root: dir)
+
+      assert config.hanami?
+    end
+  end
+
+  def test_load_stays_standard_without_app_rb
+    Dir.mktmpdir do |dir|
+      config = BunBunBundle::Config.load(root: dir)
+
+      refute config.hanami?
+    end
+  end
+
+  def test_explicit_manifest_format_wins_over_detection
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, 'config'))
+      File.write(File.join(dir, 'config/app.rb'), '')
+      File.write(
+        File.join(dir, 'config/bun.json'),
+        JSON.generate('manifestFormat' => 'standard'),
+      )
+
+      config = BunBunBundle::Config.load(root: dir)
+
+      refute config.hanami?
+    end
+  end
 end
