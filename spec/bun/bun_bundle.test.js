@@ -1099,3 +1099,114 @@ describe('prettyManifest', () => {
     expect(BunBundle.prettyManifest()).toContain('\n')
   })
 })
+
+describe('hanami mode', () => {
+  async function setupHanami(files = {}, overrides = {}) {
+    createFile('config/app.rb', '# fake hanami app')
+    await setupProject(files, overrides)
+  }
+
+  test('auto-detects when config/app.rb is present', async () => {
+    await setupHanami()
+    expect(BunBundle.config.manifestFormat).toBe('hanami')
+    expect(BunBundle.hanami).toBe(true)
+  })
+
+  test('defaults to standard mode without config/app.rb', async () => {
+    await setupProject()
+    expect(BunBundle.config.manifestFormat).toBe('standard')
+    expect(BunBundle.hanami).toBe(false)
+  })
+
+  test('explicit manifestFormat wins over auto-detection', async () => {
+    createFile('config/app.rb', '')
+    await setupProject({}, {manifestFormat: 'standard'})
+    expect(BunBundle.config.manifestFormat).toBe('standard')
+  })
+
+  test('emits JS bundle at outDir root with bare key and prefixed url', async () => {
+    await setupHanami({'app/assets/js/app.js': 'console.log("h")'})
+    await BunBundle.buildJS()
+
+    expect(BunBundle.manifest['app.js']).toBeDefined()
+    expect(BunBundle.manifest['app.js'].url).toBe('/assets/app.js')
+    expect(existsSync(join(TEST_DIR, 'public/assets/app.js'))).toBe(true)
+    expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js'))).toBe(false)
+    expect(BunBundle.manifest['js/app.js']).toBeUndefined()
+  })
+
+  test('emits CSS bundle at outDir root with bare key and prefixed url', async () => {
+    await setupHanami({'app/assets/css/app.css': 'body { color: red }'})
+    await BunBundle.buildCSS()
+
+    expect(BunBundle.manifest['app.css']).toBeDefined()
+    expect(BunBundle.manifest['app.css'].url).toBe('/assets/app.css')
+    expect(existsSync(join(TEST_DIR, 'public/assets/app.css'))).toBe(true)
+    expect(existsSync(join(TEST_DIR, 'public/assets/css/app.css'))).toBe(false)
+  })
+
+  test('fingerprinted url keeps prefix and includes hash', async () => {
+    BunBundle.fingerprint = true
+    await setupHanami({'app/assets/js/app.js': 'console.log("fp")'})
+    await BunBundle.buildJS()
+
+    expect(BunBundle.manifest['app.js'].url).toMatch(
+      /^\/assets\/app-[a-f0-9]{8}\.js$/
+    )
+  })
+
+  test('static assets keep subdir key and gain prefixed url', async () => {
+    await setupHanami({
+      'app/assets/images/logo.png': 'fake',
+      'app/assets/fonts/Inter.woff2': 'fake-font'
+    })
+    await BunBundle.copyStaticAssets()
+
+    expect(BunBundle.manifest['images/logo.png'].url).toBe(
+      '/assets/images/logo.png'
+    )
+    expect(BunBundle.manifest['fonts/Inter.woff2'].url).toBe(
+      '/assets/fonts/Inter.woff2'
+    )
+    expect(existsSync(join(TEST_DIR, 'public/assets/images/logo.png'))).toBe(
+      true
+    )
+  })
+
+  test('writes assets.json inside outDir, not bun-manifest.json', async () => {
+    await setupHanami({'app/assets/js/app.js': 'console.log("write")'})
+    await BunBundle.buildJS()
+    await BunBundle.writeManifest()
+
+    const hanamiPath = join(TEST_DIR, 'public/assets/assets.json')
+    const legacyPath = join(TEST_DIR, 'public/bun-manifest.json')
+    expect(existsSync(hanamiPath)).toBe(true)
+    expect(existsSync(legacyPath)).toBe(false)
+
+    const data = JSON.parse(readFileSync(hanamiPath, 'utf-8'))
+    expect(data['app.js'].url).toBe('/assets/app.js')
+  })
+
+  test('preserves SRI digests in the hanami manifest', async () => {
+    BunBundle.sri = ['sha384']
+    await setupHanami({'app/assets/js/app.js': 'console.log("sri")'})
+    await BunBundle.buildJS()
+    await BunBundle.writeManifest()
+
+    const data = JSON.parse(
+      readFileSync(join(TEST_DIR, 'public/assets/assets.json'), 'utf-8')
+    )
+    expect(data['app.js'].url).toBe('/assets/app.js')
+    expect(data['app.js'].sri[0]).toMatch(/^sha384-/)
+  })
+
+  test('honors a custom publicPath in the url prefix', async () => {
+    await setupHanami(
+      {'app/assets/js/app.js': 'console.log("cdn")'},
+      {publicPath: '/static'}
+    )
+    await BunBundle.buildJS()
+
+    expect(BunBundle.manifest['app.js'].url).toBe('/static/app.js')
+  })
+})
