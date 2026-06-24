@@ -75,14 +75,16 @@ your views immediately:
 
 ## Usage with Hanami
 
-Hanami ships with its own esbuild-based asset pipeline. Since BunBunBundle
-replaces it entirely, you can clean up the default setup:
+BunBunBundle plays nicely with [hanami-assets][]. Keep the gem in your
+`Gemfile`, replace the default esbuild driver, and let each side do what it
+does best: BunBunBundle bundles assets, Hanami serves them via its own helpers
+and per-slice manifests.
 
-- Remove `gem 'hanami-assets'` from your `Gemfile`
-- Delete `config/assets.js`
-- Remove all dev dependencies from `package.json`
+1. Clean up the default esbuild setup:
+   - Delete `config/assets.js`
+   - Remove all dev dependencies from `package.json`
 
-1. Set up the Hanami integration:
+2. Set up the integration:
 
    ```ruby
    # config/app.rb
@@ -96,11 +98,16 @@ replaces it entirely, you can clean up the default setup:
    end
    ```
 
-   This loads the manifest, and in development automatically registers the
-   cache-busting middleware and configures the CSP to allow the live reload
-   script and WebSocket connection.
+   BunBunBundle detects Hanami automatically (it looks for `config/app.rb`) and
+   switches to Hanami output mode: a `public/assets/assets.json` manifest plus
+   one `public/assets/_<slice>/assets.json` per slice. Hanami's `:assets`
+   provider reads those manifests, so its own `javascript_tag`,
+   `stylesheet_tag`, and `image_tag` helpers work out of the box.
 
-2. Include the helpers in your views:
+   In development, this call also registers the cache-busting middleware and
+   patches the CSP to allow the live reload script and WebSocket.
+
+3. Include only the live-reload helper in your views:
 
    ```ruby
    # app/views/helpers.rb
@@ -108,20 +115,47 @@ replaces it entirely, you can clean up the default setup:
    module MyApp
      module Views
        module Helpers
-         include BunBunBundle::Helpers
          include BunBunBundle::ReloadTag
        end
      end
    end
    ```
 
-3. Use them in your templates:
+4. Use Hanami's own helpers in your templates, plus `bun_reload_tag`:
 
    ```erb
-   <%= bun_css_tag('css/app.css') %>
-   <%= bun_js_tag('js/app.js') %>
+   <%= stylesheet_tag 'app' %>
+   <%= javascript_tag 'app' %>
    <%= bun_reload_tag %>
    ```
+
+   Slice templates resolve through the slice's own `:assets` registration, so
+   `javascript_tag 'app'` inside an `admin` slice renders
+   `/assets/_admin/app-<hash>.js`.
+
+### Slices
+
+Slice asset directories follow Hanami's convention and are auto-discovered:
+
+```
+slices/
+└── admin/
+    └── assets/
+        ├── js/app.js
+        ├── css/app.css
+        └── images/icon.svg
+```
+
+Each slice produces an isolated bundle under `public/assets/_<slice>/` with its
+own `assets.json`. Top-level files in `js/` and `css/` are picked up as entry
+points; any other subdirectory (`images/`, `fonts/`, ...) is copied as static.
+No extra configuration is needed in `bun.json`. Code shared between app and
+slices is bundled into each consumer (slice isolation, no shared chunks).
+
+By default in Hanami mode the watcher follows `app/assets` and
+`slices/*/assets`, so live reload works for slice changes too.
+
+[hanami-assets]: https://github.com/hanami/hanami-assets
 
 ## Usage with any Rack app
 
