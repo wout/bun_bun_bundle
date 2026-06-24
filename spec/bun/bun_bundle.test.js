@@ -19,6 +19,7 @@ beforeEach(() => {
   mkdirSync(TEST_DIR, {recursive: true})
   BunBundle.manifest = {}
   BunBundle.config = null
+  BunBundle.targets = []
   BunBundle.plugins = []
   BunBundle.debug = false
   BunBundle.prod = false
@@ -1208,5 +1209,221 @@ describe('hanami mode', () => {
     await BunBundle.buildJS()
 
     expect(BunBundle.manifest['app.js'].url).toBe('/static/app.js')
+  })
+
+  test('defaults watchDirs to app + slices in hanami mode', async () => {
+    await setupHanami()
+    expect(BunBundle.config.watchDirs).toEqual([
+      'app/assets',
+      'slices/*/assets'
+    ])
+  })
+
+  test('lets user override watchDirs in hanami mode', async () => {
+    await setupHanami({}, {watchDirs: ['custom/path']})
+    expect(BunBundle.config.watchDirs).toEqual(['custom/path'])
+  })
+})
+
+describe('hanami slices', () => {
+  async function setupSlices(files = {}, overrides = {}) {
+    createFile('config/app.rb', '# fake hanami app')
+    await setupProject(files, overrides)
+  }
+
+  test('discoverTargets returns just the app target without slices/', async () => {
+    await setupSlices()
+    const targets = BunBundle.targets
+
+    expect(targets).toHaveLength(1)
+    expect(targets[0].name).toBe('app')
+    expect(targets[0].outSubdir).toBe('')
+    expect(targets[0].urlPrefix).toBe('/assets')
+  })
+
+  test('discovers a slice and includes it as a target', async () => {
+    await setupSlices({
+      'slices/admin/assets/js/app.js': 'console.log("admin")'
+    })
+    const targets = BunBundle.targets
+
+    expect(targets.map(t => t.name)).toEqual(['app', 'admin'])
+    const admin = targets.find(t => t.name === 'admin')
+    expect(admin.srcDir).toBe('slices/admin/assets')
+    expect(admin.outSubdir).toBe('_admin')
+    expect(admin.urlPrefix).toBe('/assets/_admin')
+    expect(admin.entryPoints.js).toEqual(['slices/admin/assets/js/app.js'])
+  })
+
+  test('returns slices in alphabetical order', async () => {
+    await setupSlices({
+      'slices/zeta/assets/js/app.js': '1',
+      'slices/alpha/assets/js/app.js': '2',
+      'slices/mid/assets/js/app.js': '3'
+    })
+
+    expect(BunBundle.targets.map(t => t.name)).toEqual([
+      'app',
+      'alpha',
+      'mid',
+      'zeta'
+    ])
+  })
+
+  test('skips slices with no assets directory', async () => {
+    createFile('slices/empty/lib/.gitkeep', '')
+    await setupSlices()
+
+    expect(BunBundle.targets.map(t => t.name)).toEqual(['app'])
+  })
+
+  test('skips slice asset dirs that contain nothing buildable', async () => {
+    createFile('slices/empty/assets/.gitkeep', '')
+    await setupSlices()
+
+    expect(BunBundle.targets.map(t => t.name)).toEqual(['app'])
+  })
+
+  test('picks up multiple entry points per slice', async () => {
+    await setupSlices({
+      'slices/admin/assets/js/app.js': '1',
+      'slices/admin/assets/js/widgets.js': '2',
+      'slices/admin/assets/css/app.css': 'body {}'
+    })
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+
+    expect(admin.entryPoints.js).toEqual([
+      'slices/admin/assets/js/app.js',
+      'slices/admin/assets/js/widgets.js'
+    ])
+    expect(admin.entryPoints.css).toEqual(['slices/admin/assets/css/app.css'])
+  })
+
+  test('picks up typescript entry points in slices', async () => {
+    await setupSlices({
+      'slices/admin/assets/js/app.ts': 'const x: number = 1'
+    })
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+
+    expect(admin.entryPoints.js).toEqual(['slices/admin/assets/js/app.ts'])
+  })
+
+  test('discovers static dirs alongside js/css in slices', async () => {
+    await setupSlices({
+      'slices/admin/assets/js/app.js': '1',
+      'slices/admin/assets/images/icon.png': 'fake',
+      'slices/admin/assets/fonts/Inter.woff2': 'fake'
+    })
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+
+    expect(admin.staticDirs).toEqual([
+      'slices/admin/assets/fonts',
+      'slices/admin/assets/images'
+    ])
+  })
+
+  test('builds JS into per-slice output dir with prefixed url', async () => {
+    await setupSlices({
+      'slices/admin/assets/js/app.js': 'console.log("admin")'
+    })
+    await BunBundle.buildJS()
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+
+    expect(admin.manifest['app.js'].url).toBe('/assets/_admin/app.js')
+    expect(existsSync(join(TEST_DIR, 'public/assets/_admin/app.js'))).toBe(true)
+    expect(BunBundle.manifest['app.js']).toBeUndefined()
+  })
+
+  test('builds CSS into per-slice output dir with prefixed url', async () => {
+    await setupSlices({
+      'slices/admin/assets/css/app.css': 'body { color: red }'
+    })
+    await BunBundle.buildCSS()
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+
+    expect(admin.manifest['app.css'].url).toBe('/assets/_admin/app.css')
+    expect(existsSync(join(TEST_DIR, 'public/assets/_admin/app.css'))).toBe(
+      true
+    )
+  })
+
+  test('copies static slice assets to slice subdir with prefixed url', async () => {
+    await setupSlices({
+      'slices/admin/assets/images/icon.png': 'fake-image'
+    })
+    await BunBundle.copyStaticAssets()
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+
+    expect(admin.manifest['images/icon.png'].url).toBe(
+      '/assets/_admin/images/icon.png'
+    )
+    expect(
+      existsSync(join(TEST_DIR, 'public/assets/_admin/images/icon.png'))
+    ).toBe(true)
+  })
+
+  test('writes one assets.json per target', async () => {
+    await setupSlices({
+      'app/assets/js/app.js': 'console.log("app")',
+      'slices/admin/assets/js/app.js': 'console.log("admin")',
+      'slices/auth/assets/css/app.css': 'body {}'
+    })
+    await BunBundle.buildJS()
+    await BunBundle.buildCSS()
+    await BunBundle.writeManifest()
+
+    const appManifest = JSON.parse(
+      readFileSync(join(TEST_DIR, 'public/assets/assets.json'), 'utf-8')
+    )
+    const adminManifest = JSON.parse(
+      readFileSync(join(TEST_DIR, 'public/assets/_admin/assets.json'), 'utf-8')
+    )
+    const authManifest = JSON.parse(
+      readFileSync(join(TEST_DIR, 'public/assets/_auth/assets.json'), 'utf-8')
+    )
+
+    expect(appManifest['app.js'].url).toBe('/assets/app.js')
+    expect(adminManifest['app.js'].url).toBe('/assets/_admin/app.js')
+    expect(authManifest['app.css'].url).toBe('/assets/_auth/app.css')
+  })
+
+  test('app and slice manifests do not bleed into each other', async () => {
+    await setupSlices({
+      'app/assets/js/app.js': 'console.log("app")',
+      'slices/admin/assets/js/app.js': 'console.log("admin")'
+    })
+    await BunBundle.buildJS()
+
+    expect(Object.keys(BunBundle.manifest)).toEqual(['app.js'])
+    expect(BunBundle.manifest['app.js'].url).toBe('/assets/app.js')
+
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+    expect(Object.keys(admin.manifest)).toEqual(['app.js'])
+    expect(admin.manifest['app.js'].url).toBe('/assets/_admin/app.js')
+  })
+
+  test('skips writing assets.json for slices that produced no output', async () => {
+    createFile('slices/empty/assets/js/.gitkeep', '')
+    createFile('slices/empty/assets/css/.gitkeep', '')
+    await setupSlices({'app/assets/js/app.js': 'console.log("app")'})
+    await BunBundle.buildJS()
+    await BunBundle.writeManifest()
+
+    expect(existsSync(join(TEST_DIR, 'public/assets/_empty/assets.json'))).toBe(
+      false
+    )
+  })
+
+  test('fingerprints slice bundles with hash in the url', async () => {
+    BunBundle.fingerprint = true
+    await setupSlices({
+      'slices/admin/assets/js/app.js': 'console.log("hashed")'
+    })
+    await BunBundle.buildJS()
+    const admin = BunBundle.targets.find(t => t.name === 'admin')
+
+    expect(admin.manifest['app.js'].url).toMatch(
+      /^\/assets\/_admin\/app-[a-f0-9]{8}\.js$/
+    )
   })
 })
