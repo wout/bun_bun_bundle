@@ -82,6 +82,19 @@ replaces it entirely, you can clean up the default setup:
 - Delete `config/assets.js`
 - Remove all dev dependencies from `package.json`
 
+> [!NOTE]
+> BunBunBundle takes a different approach from `hanami-assets`, it doesn't
+> integrate (well) with it. The key difference is coupling. `hanami-assets`
+> ties front-end organisation to back-end slice structure: each slice gets its
+> own `:assets` provider, its own manifest, and its own bundle, and helpers
+> resolve through the slice container. BunBunBundle leaves the two independent.
+> You can still bundle per slice though; just add the slice's entry point to
+> `bun.json` and reference it like any other asset, but the front-end is free
+> to organise itself differently from the slices (one shared bundle, multiple
+> bundles split by audience or weight, whatever makes sense). On top of that,
+> BunBunBundle ships live reload, CSS hot-reloading, and a plugin system that
+> `hanami-assets` does not. Mixing the two is possible but not recommended.
+
 1. Set up the Hanami integration:
 
    ```ruby
