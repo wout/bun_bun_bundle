@@ -1417,6 +1417,49 @@ describe('hanami slices', () => {
     )
   })
 
+  test('slices allowlist restricts discovery to named slices', async () => {
+    await setupSlices(
+      {
+        'slices/admin/assets/js/app.js': '1',
+        'slices/auth/assets/js/app.js': '2',
+        'slices/site/assets/js/site.js': '3'
+      },
+      {slices: ['site']}
+    )
+
+    expect(BunBundle.targets.map(t => t.name)).toEqual(['app', 'site'])
+  })
+
+  test('empty slices allowlist discovers no slices', async () => {
+    await setupSlices(
+      {
+        'slices/admin/assets/js/app.js': '1',
+        'slices/auth/assets/js/app.js': '2'
+      },
+      {slices: []}
+    )
+
+    expect(BunBundle.targets.map(t => t.name)).toEqual(['app'])
+  })
+
+  test('missing slices key discovers every slice', async () => {
+    await setupSlices({
+      'slices/admin/assets/js/app.js': '1',
+      'slices/auth/assets/js/app.js': '2'
+    })
+
+    expect(BunBundle.targets.map(t => t.name)).toEqual(['app', 'admin', 'auth'])
+  })
+
+  test('allowlist names that do not exist on disk are ignored', async () => {
+    await setupSlices(
+      {'slices/admin/assets/js/app.js': '1'},
+      {slices: ['admin', 'nonexistent']}
+    )
+
+    expect(BunBundle.targets.map(t => t.name)).toEqual(['app', 'admin'])
+  })
+
   test('fingerprints slice bundles with hash in the url', async () => {
     BunBundle.fingerprint = true
     await setupSlices({

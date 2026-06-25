@@ -155,6 +155,48 @@ slices is bundled into each consumer (slice isolation, no shared chunks).
 By default in Hanami mode the watcher follows `app/assets` and
 `slices/*/assets`, so live reload works for slice changes too.
 
+#### Controlling which slices get isolated bundles
+
+By default, every slice under `slices/` with assets is treated as an
+independent bundle. That matches Hanami's stock conventions, but not every
+project actually wants it: some apps deliberately import slice CSS/JS into
+the host bundle (via `@import` or `glob:` imports), so only a few slices
+need their own bundle.
+
+Pass `slices` in `bun.json` to restrict auto-discovery to an explicit
+allowlist:
+
+```json
+{
+  "slices": ["site"]
+}
+```
+
+With that config, only `slices/site/` is built as an isolated bundle (output
+to `public/assets/_site/`). Other slices are ignored by the bundler. Their
+CSS and JS can still be pulled into the host bundle from `app/assets/css/app.css`
+and `app/assets/js/app.js`:
+
+```css
+/* app/assets/css/app.css */
+@import '$/slices/*/assets/css/**/*.css';
+```
+
+```javascript
+// app/assets/js/app.js
+import sliceRegistrars from 'glob:$/slices/*/assets/js/index.js'
+```
+
+Set `"slices": []` to disable slice auto-discovery entirely (only the app
+target is built). Omitting `slices` keeps the default behavior of
+discovering every slice.
+
+> [!TIP]
+> If most of your slices are tightly coupled to the host UI and only a few
+> are heavyweight enough to warrant their own bundle, the allowlist plus
+> glob imports gives you one shared bundle for the host + a per-slice
+> bundle only where it pays off.
+
 [hanami-assets]: https://github.com/hanami/hanami-assets
 
 ## Usage with any Rack app
