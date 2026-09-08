@@ -432,6 +432,25 @@ describe('buildAssets', () => {
     expect(entry.sri[0]).toMatch(/^sha256-/)
     expect(entry.sri[1]).toMatch(/^sha384-/)
   })
+
+  test('flips ok to false when an entry fails to build', async () => {
+    BunBundle.ok = true
+    await setupProject({
+      'app/assets/js/app.js': "import 'does-not-exist-anywhere'"
+    })
+    await BunBundle.buildJS()
+
+    expect(BunBundle.ok).toBe(false)
+    expect(BunBundle.manifest['js/app.js']).toBeUndefined()
+  })
+
+  test('leaves ok true when all entries succeed', async () => {
+    BunBundle.ok = true
+    await setupProject({'app/assets/js/app.js': 'console.log("ok")'})
+    await BunBundle.buildJS()
+
+    expect(BunBundle.ok).toBe(true)
+  })
 })
 
 describe('copyStaticAssets', () => {
@@ -1061,6 +1080,20 @@ describe('full build', () => {
 
     expect(existsSync(join(TEST_DIR, 'public/assets/js/stale.js'))).toBe(false)
     expect(existsSync(join(TEST_DIR, 'public/assets/js/app.js'))).toBe(true)
+  })
+
+  test('build() returns true when all entries succeed', async () => {
+    createFile('app/assets/js/app.js', 'console.log("ok")')
+    createFile('app/assets/css/app.css', 'body { color: red }')
+
+    expect(await BunBundle.build()).toBe(true)
+  })
+
+  test('build() returns false when any entry fails', async () => {
+    createFile('app/assets/js/app.js', "import 'does-not-exist-anywhere'")
+    createFile('app/assets/css/app.css', 'body { color: red }')
+
+    expect(await BunBundle.build()).toBe(false)
   })
 })
 
