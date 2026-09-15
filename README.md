@@ -319,6 +319,20 @@ To exclude specific paths, add one or more `not` clauses:
   './components/internal/**';
 ```
 
+Cascade layer assignments are preserved on each expanded import. Both named
+and anonymous forms are supported:
+
+```css
+@import './components/*.css' layer(components);
+@import './utilities/*.css' layer;
+```
+
+`layer` clauses may be combined with `not` clauses (layer first):
+
+```css
+@import './components/**/*.css' layer(components) not './components/admin/**';
+```
+
 > [!WARNING]
 > Always include the file extension in glob patterns (e.g., `**/*.css` instead
 > of `**/*`). Without it, editor temp files like Vim's `~` backups will be

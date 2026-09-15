@@ -821,6 +821,53 @@ describe('cssGlobs plugin', () => {
     expect(content).not.toContain('.panel')
   })
 
+  test('preserves layer(name) on glob @import', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css':
+        "@import './components/*.css' layer(components);",
+      'app/assets/css/components/button.css': '.button { color: red }',
+      'app/assets/css/components/card.css': '.card { color: blue }'
+    })
+
+    expect(content).toContain('@layer components')
+    expect(content).toContain('.button')
+    expect(content).toContain('.card')
+  })
+
+  test('preserves nested layer name', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css':
+        "@import './components/*.css' layer(ui.components);",
+      'app/assets/css/components/button.css': '.button { color: red }'
+    })
+
+    expect(content).toContain('@layer ui.components')
+    expect(content).toContain('.button')
+  })
+
+  test('preserves anonymous layer on glob @import', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css': "@import './components/*.css' layer;",
+      'app/assets/css/components/button.css': '.button { color: red }'
+    })
+
+    expect(content).toContain('@layer')
+    expect(content).toContain('.button')
+  })
+
+  test('combines layer and not clauses', async () => {
+    const content = await buildCSS({
+      'app/assets/css/app.css':
+        "@import './components/**/*.css' layer(components) not './components/admin/**';",
+      'app/assets/css/components/button.css': '.button { color: red }',
+      'app/assets/css/components/admin/panel.css': '.panel { color: blue }'
+    })
+
+    expect(content).toContain('@layer components')
+    expect(content).toContain('.button')
+    expect(content).not.toContain('.panel')
+  })
+
   test('supports multiple not clauses', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css': [
