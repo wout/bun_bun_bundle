@@ -36,15 +36,23 @@ afterAll(() => {
 
 function createFile(relativePath, content = '') {
   const fullPath = join(TEST_DIR, relativePath)
-  mkdirSync(join(fullPath, '..'), {recursive: true})
+  const dir = join(fullPath, '..')
+  mkdirSync(dir, {recursive: true})
   writeFileSync(fullPath, content)
-  // Force the file data to disk so Bun.build can read it on container
-  // filesystems where dir entries land before file contents do.
+  // Force the file data and its directory entry to disk so Bun.build can
+  // resolve them on container filesystems where readdir and open can observe
+  // different views of freshly created files.
   const fd = openSync(fullPath, 'r')
   try {
     fsyncSync(fd)
   } finally {
     closeSync(fd)
+  }
+  const dirFd = openSync(dir, 'r')
+  try {
+    fsyncSync(dirFd)
+  } finally {
+    closeSync(dirFd)
   }
   return fullPath
 }
