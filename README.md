@@ -447,6 +447,10 @@ Reference custom plugins by their file path in your config:
 }
 ```
 
+A plugin list replaces the built-in list for that asset type only. In the
+example above both lists re-include the defaults, but overriding just `"js"`
+leaves the default `css` plugins (`aliases`, `cssGlobs`) in place.
+
 > [!WARNING]
 > The order of the plugins matters here. For example, the aliases plugin needs
 > to resolve the paths first before the glob plugin can do its work. Keep that
