@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-09-28
+
+### Fixed
+
+- The aliases plugin now rewrites `$/` paths in bare side-effect imports
+  (`import '$/lib/setup.js'`), which previously failed to resolve at build
+  time
+
+### Changed
+
+- A user `plugins` entry in `config/bun.json` now merges per asset type:
+  overriding `"js"` no longer drops the default `"css"` plugins. Previously
+  any `plugins` entry replaced the entire default plugin set. A plugin list
+  for a given type still replaces that type's list, so pass `"js": []` to
+  disable the defaults for a type
+
+## [0.16.0] - 2026-09-15
+
+### Fixed
+
+- Cascade layer assignments on CSS glob imports are preserved on each expanded
+  import. Both named (`layer(components)`) and anonymous (`layer`) forms are
+  supported, and may be combined with `not` exclusion clauses
+
+## [0.15.1] - 2026-09-10
+
+### Fixed
+
+- The Bun child process now exits when its parent dies. In serve mode the
+  parent PID is polled every second and the server shuts down cleanly once
+  the parent is gone, so no orphaned dev servers are left behind
+
+## [0.15.0] - 2026-09-09
+
+### Changed
+
+- A failed build now fails the run: `build` reports per-entry errors, prints
+  `Built with errors` instead of a success message, and the CLI exits with a
+  non-zero status code. Previously a failing entry only logged an error and
+  the run still reported success
+
+### Added
+
+- Documentation note about compatibility with `hanami-assets`
+
 ## [0.14.0] - 2026-05-31
 
 ### Added
