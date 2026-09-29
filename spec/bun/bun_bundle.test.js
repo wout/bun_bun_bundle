@@ -650,6 +650,43 @@ describe('aliases plugin', () => {
     expect(content).toContain('42')
   })
 
+  test('replaces $/ references in bare side-effect imports', async () => {
+    const aliases = (await import('../../lib/bun/plugins/aliases.js')).default
+    const transform = aliases({root: '/root'})
+
+    expect(transform("import '$/lib/setup.js'", {path: 'app.js'})).toBe(
+      "import '/root/lib/setup.js'"
+    )
+    expect(transform('import "$/lib/setup.js"', {path: 'app.js'})).toBe(
+      'import "/root/lib/setup.js"'
+    )
+  })
+
+  test('builds JS with a bare side-effect import of a $/ path', async () => {
+    const content = await buildJS({
+      'app/assets/js/app.js': "import '$/lib/setup.js'\nconsole.log('app')",
+      'lib/setup.js': "console.log('side effect')"
+    })
+
+    expect(content).not.toContain('$/')
+    expect(content).toContain('side effect')
+  })
+
+  test('replaces $/ references in existing import forms', async () => {
+    const aliases = (await import('../../lib/bun/plugins/aliases.js')).default
+    const transform = aliases({root: '/root'})
+
+    const cases = [
+      ["import x from '$/foo.js'", "import x from '/root/foo.js'"],
+      ["export {x} from '$/foo.js'", "export {x} from '/root/foo.js'"],
+      ["import('$/foo.js')", "import('/root/foo.js')"],
+      ["require('$/foo.js')", "require('/root/foo.js')"],
+      ["await import('$/foo.js')", "await import('/root/foo.js')"]
+    ]
+    for (const [input, expected] of cases)
+      expect(transform(input, {path: 'app.js'})).toBe(expected)
+  })
+
   test('replaces $/ references in CSS @import', async () => {
     const content = await buildCSS({
       'app/assets/css/app.css': "@import '$/lib/reset.css';",
