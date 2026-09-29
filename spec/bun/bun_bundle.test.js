@@ -225,7 +225,7 @@ describe('loadConfig', () => {
     expect(BunBundle.config.devServer.host).toBe('127.0.0.1')
   })
 
-  test('user can override plugins', () => {
+  test('user plugin lists replace defaults per type', () => {
     createFile(
       'config/bun.json',
       JSON.stringify({
@@ -236,6 +236,17 @@ describe('loadConfig', () => {
 
     expect(BunBundle.config.plugins.css).toEqual(['cssAliases'])
     expect(BunBundle.config.plugins.js).toEqual(['config/bun/banner.js'])
+  })
+
+  test('overriding one plugin type keeps defaults for the other', () => {
+    createFile(
+      'config/bun.json',
+      JSON.stringify({plugins: {js: ['config/bun/banner.js']}})
+    )
+    BunBundle.loadConfig()
+
+    expect(BunBundle.config.plugins.js).toEqual(['config/bun/banner.js'])
+    expect(BunBundle.config.plugins.css).toEqual(['aliases', 'cssGlobs'])
   })
 })
 
@@ -585,8 +596,8 @@ describe('loadPlugins', () => {
     ).toBeDefined()
   })
 
-  test('loads no plugins when config is empty', async () => {
-    createFile('config/bun.json', JSON.stringify({plugins: {}}))
+  test('loads no plugins when plugin lists are empty', async () => {
+    createFile('config/bun.json', JSON.stringify({plugins: {css: [], js: []}}))
     BunBundle.loadConfig()
     await BunBundle.loadPlugins()
 
@@ -596,7 +607,7 @@ describe('loadPlugins', () => {
   test('handles unknown built-in plugin gracefully', async () => {
     createFile(
       'config/bun.json',
-      JSON.stringify({plugins: {css: ['nonExistent']}})
+      JSON.stringify({plugins: {css: ['nonExistent'], js: []}})
     )
     BunBundle.loadConfig()
     await BunBundle.loadPlugins()
@@ -613,7 +624,7 @@ describe('loadPlugins', () => {
     )
     createFile(
       'config/bun.json',
-      JSON.stringify({plugins: {css: ['config/bun/uppercase.js']}})
+      JSON.stringify({plugins: {css: ['config/bun/uppercase.js'], js: []}})
     )
     BunBundle.loadConfig()
     await BunBundle.loadPlugins()
