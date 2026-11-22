@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Build outputs that Bun emits alongside the entry file, such as CSS `url()`
+  assets larger than Bun's 128KiB inline limit, are now written to the output
+  directory. Previously they were silently discarded, leaving the stylesheet
+  pointing at hashed files that were never written (404 in the browser)
+
 ## [0.17.0] - 2026-09-28
 
 ### Fixed

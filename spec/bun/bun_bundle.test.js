@@ -306,6 +306,24 @@ describe('buildAssets', () => {
     expect(existsSync(join(TEST_DIR, 'public/assets/css/app.css'))).toBe(true)
   })
 
+  test('writes large CSS-referenced assets next to the bundle', async () => {
+    const font = 'x'.repeat(150 * 1024)
+    const css = await buildCSS({
+      'app/assets/css/app.css': [
+        '@font-face {',
+        '  font-family: Inter;',
+        "  src: url('$/app/assets/fonts/Inter.woff2') format('woff2')",
+        '}'
+      ].join('\n'),
+      'app/assets/fonts/Inter.woff2': font
+    })
+
+    // Assets above Bun's 128KiB inline limit ship as hashed sibling files
+    const match = css.match(/url\("?\.\/(Inter-[\w-]+\.woff2)"?\)/)
+    expect(match).not.toBeNull()
+    expect(readOutput(`css/${match[1]}`)).toBe(font)
+  })
+
   test('fingerprints when fingerprint is enabled', async () => {
     BunBundle.fingerprint = true
     await setupProject({'app/assets/js/app.js': 'console.log("prod")'})
